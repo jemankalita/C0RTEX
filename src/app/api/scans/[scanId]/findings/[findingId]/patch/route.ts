@@ -14,7 +14,8 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
     );
   }
 
-  const suggestion = suggestPatch(finding);
+  const file = record.files.find((item) => item.path === finding.file);
+  const suggestion = suggestPatch(finding, file?.content);
   if (!suggestion.patch.trim()) {
     return NextResponse.json(
       { error: "The suggested patch could not be generated for this finding.", retry: true, demo: true },
@@ -52,9 +53,10 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
     finding: next,
     patch: next?.patch,
     patchExplanation: next?.patchExplanation,
+    filePath: finding.file,
     assumptions: [
-      "C0RTEX applies confirmed patches only to this scan's working copy, not to GitHub.",
-      "Download the patched file and commit it in the real repository after review.",
+      "Save the generated code and review it before committing to the real repository.",
+      "C0RTEX does not push to GitHub.",
     ],
     recommendedTests: next?.relatedTest ? [next.relatedTest] : ["Add a regression test for the affected path."],
     limitations: next?.limitations ?? [],

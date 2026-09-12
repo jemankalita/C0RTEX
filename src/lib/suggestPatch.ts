@@ -1,32 +1,50 @@
+import { applyUnifiedHint } from "@/lib/applyUnifiedHint";
+
 export type PatchHint = {
   ruleId?: string;
   snippet?: string;
   codeBefore?: string;
+  line?: number;
   patch?: string;
   patchExplanation?: string;
 };
 
-export function suggestPatch(finding: PatchHint): { patch: string; patchExplanation: string } {
-  if (finding.patch?.trim()) {
+export function suggestPatch(
+  finding: PatchHint,
+  fileContent?: string,
+): { patch: string; patchExplanation: string } {
+  if (finding.patch?.trim() && (!fileContent || applyUnifiedHint(fileContent, finding.patch).ok)) {
     return {
       patch: finding.patch,
       patchExplanation: finding.patchExplanation ?? "Review this minimal change before applying it.",
     };
   }
 
-  const target = (finding.snippet || finding.codeBefore || "").trim();
+  const target = targetLine(finding, fileContent);
   if (!target) {
     return {
-      patch: "",
-      patchExplanation: "No source snippet was available to draft a patch.",
+      patch: finding.patch ?? "",
+      patchExplanation: finding.patchExplanation ?? "No source snippet was available to draft a patch.",
     };
   }
 
-  const replacement = replacementForRule(finding.ruleId, target);
   return {
-    patch: `- ${target}\n+ ${replacement}`,
+    patch: `- ${target}\n+ ${replacementForRule(finding.ruleId, target)}`,
     patchExplanation: explanationForRule(finding.ruleId),
   };
+}
+
+function targetLine(finding: PatchHint, fileContent?: string) {
+  if (fileContent) {
+    const lines = fileContent.split(/\r?\n/);
+    if (typeof finding.line === "number" && lines[finding.line - 1]?.trim()) {
+      return lines[finding.line - 1].trim();
+    }
+    const snippet = (finding.snippet || "").trim();
+    const match = snippet ? lines.find((line) => line.includes(snippet)) : undefined;
+    if (match) return match.trim();
+  }
+  return (finding.snippet || finding.codeBefore || "").trim().split(/\r?\n/)[0] ?? "";
 }
 
 function replacementForRule(ruleId: string | undefined, target: string) {

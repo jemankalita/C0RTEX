@@ -82,7 +82,7 @@ export function ToolPage() {
               role="alert"
             >
               {scan.errorMessage}
-              <button type="button" className="ml-3 underline" onClick={scan.startScan}>
+              <button type="button" className="ml-3 underline" onClick={scan.runDemoFallback}>
                 Run demo fallback
               </button>
             </motion.p>
@@ -194,6 +194,7 @@ export function ToolPage() {
                     onConfirmToggle={scan.setConfirmingPatch}
                     onApply={scan.applyPatch}
                     onReject={scan.rejectPatch}
+                    onSaveCode={scan.saveGeneratedCode}
                     onDownload={scan.downloadPatchedFile}
                     onDownloadAll={scan.downloadAllPatchedFiles}
                   />
@@ -285,6 +286,7 @@ export function ToolPage() {
                         onConfirmToggle={scan.setConfirmingPatch}
                         onApply={scan.applyPatch}
                         onReject={scan.rejectPatch}
+                        onSaveCode={scan.saveGeneratedCode}
                         onDownload={scan.downloadPatchedFile}
                         onDownloadAll={scan.downloadAllPatchedFiles}
                       />

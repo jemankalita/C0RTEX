@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { applyUnifiedHint } from "@/lib/applyUnifiedHint";
 import { withFindingStatus } from "@/lib/findingState";
 import { suggestPatch } from "@/lib/suggestPatch";
-import { applyUnifiedHint } from "@/server/patch/applyUnifiedHint";
 import { emitScanEvent, getScanRecord } from "@/server/store";
 
 export async function POST(request: Request, context: { params: Promise<{ scanId: string; findingId: string }> }) {
@@ -29,8 +29,8 @@ export async function POST(request: Request, context: { params: Promise<{ scanId
     );
   }
 
-  const suggestion = suggestPatch(finding);
   const file = record.files.find((item) => item.path === finding.file);
+  const suggestion = suggestPatch(finding, file?.content);
   if (!file || !suggestion.patch.trim()) {
     return NextResponse.json(
       { error: "The suggested patch could not be applied cleanly to the scan working copy.", retry: true, demo: true },
@@ -41,7 +41,13 @@ export async function POST(request: Request, context: { params: Promise<{ scanId
   const applied = applyUnifiedHint(file.content, suggestion.patch);
   if (!applied.ok) {
     return NextResponse.json(
-      { error: "The suggested patch could not be applied cleanly to the scan working copy.", retry: true, demo: true },
+      {
+        error: "The suggested patch could not be applied cleanly to the scan working copy.",
+        retry: true,
+        demo: true,
+        patch: suggestion.patch,
+        filePath: file.path,
+      },
       { status: 400 },
     );
   }
