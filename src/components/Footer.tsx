@@ -8,8 +8,9 @@ import { ScrambleText } from "@/components/motion/Scramble";
 const SITEMAP = [
   { n: "01", label: "How it works", href: "/#how-it-works" },
   { n: "02", label: "Reports", href: "/#threat-reports" },
-  { n: "03", label: "Safety", href: "/#safety" },
-  { n: "04", label: "Demo", href: "/#demo" },
+  { n: "03", label: "Accuracy", href: "/benchmark" },
+  { n: "04", label: "Safety", href: "/#safety" },
+  { n: "05", label: "Demo", href: "/#demo" },
 ] as const;
 
 const EASE = [0.16, 1, 0.3, 1] as const;
