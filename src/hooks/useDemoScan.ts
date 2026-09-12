@@ -21,6 +21,7 @@ import {
   countFindingsBySeverity,
   gradeFromScore,
   INITIAL_SCORE,
+  isPrimaryAuthorizationFinding,
   scoreFromFindings,
 } from "@/lib/score";
 import type {

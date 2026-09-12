@@ -26,7 +26,7 @@ const TABS = ["Overview", "Findings", "Attack path", "Patch"] as const;
 
 export function ToolPage() {
   const searchParams = useSearchParams();
-  const demoMode = searchParams.get("demo") === "true";
+  const demoMode = searchParams?.get("demo") === "true";
   const scan = useDemoScan({ demoMode });
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const sorted = useMemo(() => sortFindings(scan.findings), [scan.findings]);
