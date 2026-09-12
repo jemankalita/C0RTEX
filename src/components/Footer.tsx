@@ -16,7 +16,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-black/20 bg-[#FF4A00]">
+    <footer className="relative overflow-hidden border-t border-black/20 bg-lime">
       {/* faint grid texture, Raven-style depth */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -38,7 +38,10 @@ export function Footer() {
             Think like an attacker.
             <br />
             <span className="text-black/45">Fix like an engineer.</span>
-            <span className="pixel-asterisk" aria-hidden="true" style={{ color: "#ffffff" }}>
+            <span
+              className="pixel-asterisk !text-black"
+              aria-hidden="true"
+            >
               *
             </span>
           </h2>
