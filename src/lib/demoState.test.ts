@@ -16,9 +16,9 @@ import { DEMO_FINDINGS } from "@/data/demoFindings";
 describe("demo findings", () => {
   it("counts the labeled demo severities", () => {
     expect(countBySeverity(DEMO_FINDINGS)).toEqual({
-      high: 2,
-      medium: 2,
-      low: 1,
+      high: 5,
+      medium: 6,
+      low: 3,
     });
   });
 });

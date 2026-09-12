@@ -38,6 +38,77 @@ const RULES: Rule[] = [
     }),
   },
   {
+    id: "command-injection",
+    title: "Possible command injection",
+    category: "Injection",
+    confidence: 0.87,
+    test: (_file, line) => /run\(`[^`]*\$\{req\.(query|body|params)\./.test(line),
+    extras: () => ({
+      route: "/api/admin/export",
+      source: "req.query.path",
+      sink: "child_process.exec",
+    }),
+  },
+  {
+    id: "path-traversal",
+    title: "Unvalidated file path",
+    category: "Injection",
+    confidence: 0.84,
+    test: (_file, line) => /readFile\(`[^`]*\$\{req\.(query|body|params)\./.test(line),
+    extras: () => ({
+      route: "/api/files/invoice",
+      source: "req.query.name",
+      sink: "fs.readFile",
+    }),
+  },
+  {
+    id: "ssrf",
+    title: "User-controlled outbound fetch",
+    category: "Injection",
+    confidence: 0.83,
+    test: (_file, line) => /fetch\(req\.(query|body|params)\./.test(line),
+    extras: () => ({
+      route: "/api/webhooks/preview",
+      source: "req.query.url",
+      sink: "fetch",
+    }),
+  },
+  {
+    id: "open-redirect",
+    title: "Open redirect",
+    category: "Security Misconfiguration",
+    confidence: 0.8,
+    test: (_file, line) => /redirect\(req\.(query|body|params)\./.test(line),
+    extras: () => ({
+      route: "/api/users/continue",
+      source: "req.query.next",
+      sink: "res.redirect",
+    }),
+  },
+  {
+    id: "mass-assignment",
+    title: "Unfiltered profile update",
+    category: "Broken Access Control",
+    confidence: 0.78,
+    test: (_file, line) => /User\.update\([^,]+,\s*req\.body\)/.test(line),
+    extras: () => ({
+      route: "/api/users/profile",
+      source: "req.body",
+      sink: "User.update",
+    }),
+  },
+  {
+    id: "auth-fallback",
+    title: "Failed token still becomes a user",
+    category: "Broken Access Control",
+    confidence: 0.82,
+    test: (file, line) => file.includes("auth") && line.includes('req.user = { id: "user-1" }'),
+    extras: () => ({
+      route: "/api/*",
+      sink: "requireAuth",
+    }),
+  },
+  {
     id: "wildcard-cors",
     title: "Wildcard CORS configuration",
     category: "Security Misconfiguration",
@@ -53,12 +124,40 @@ const RULES: Rule[] = [
     extras: () => ({ sink: "PaymentClient" }),
   },
   {
+    id: "insecure-jwt",
+    title: "Hardcoded JWT signing secret",
+    category: "Cryptographic/Secret Management",
+    confidence: 0.86,
+    test: (_file, line) =>
+      line.includes("DEMO_JWT_SECRET") && (line.includes("jwt.sign") || line.includes("jwt.verify")),
+    extras: () => ({ sink: "jsonwebtoken" }),
+  },
+  {
     id: "unsafe-html",
     title: "Unsafe HTML rendering",
     category: "Injection/XSS",
     confidence: 0.76,
     test: (_file, line) => line.includes("dangerouslySetInnerHTML"),
     extras: () => ({ sink: "dangerouslySetInnerHTML" }),
+  },
+  {
+    id: "debug-env",
+    title: "Debug endpoint exposes environment",
+    category: "Security Misconfiguration",
+    confidence: 0.79,
+    test: (_file, line) => line.includes("process.env") && line.includes("res.json"),
+    extras: () => ({
+      route: "/api/admin/debug",
+      sink: "process.env",
+    }),
+  },
+  {
+    id: "insecure-cookie",
+    title: "Session cookie missing security flags",
+    category: "Security Misconfiguration",
+    confidence: 0.74,
+    test: (file, line) => file.includes("session") && line.includes("httpOnly: false"),
+    extras: () => ({ sink: "res.cookie" }),
   },
 ];
 

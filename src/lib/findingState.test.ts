@@ -5,7 +5,7 @@ import { createDemoFindings } from "@/data/demoFindings";
 describe("finding state", () => {
   it("sorts findings by severity", () => {
     const titles = sortFindings(createDemoFindings()).map((finding) => finding.severity);
-    expect(titles.slice(0, 2)).toEqual(["HIGH", "HIGH"]);
+    expect(titles.slice(0, 3)).toEqual(["CRITICAL", "HIGH", "HIGH"]);
   });
 
   it("applies a patch only to a temporary finding copy", () => {

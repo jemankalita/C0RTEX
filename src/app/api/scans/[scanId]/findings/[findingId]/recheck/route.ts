@@ -35,6 +35,9 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
   }
 
   record.findings = withFindingStatus(record.findings, findingId, "RESOLVED");
+  if (record.report) {
+    record.report = { ...record.report, findings: record.findings };
+  }
   emitScanEvent(record, {
     stage: "resolved",
     label: "Selected finding resolved.",

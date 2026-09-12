@@ -1,3 +1,4 @@
+import type { ThreatLens } from "@/server/lenses";
 import type { SecurityFinding } from "@/types/security";
 
 export type RepositoryFile = {
@@ -84,6 +85,9 @@ export type AgentResult = {
 export type ScanReport = {
   scanId: string;
   analysisMode: "demo" | "live";
+  scanMode: "auto" | "guided";
+  selectedLenses: ThreatLens[];
+  agents: AgentResult[];
   findings: SecurityFinding[];
   limitations: string[];
   failedAgents: string[];

@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { isThreatLens, type ScanMode, type ThreatLens } from "@/server/lenses";
 import { runSecurityAnalysis } from "@/server/orchestrator";
 import { createScanRecord } from "@/server/store";
 
 export async function POST(request: Request) {
-  let body: { source?: string; repositoryId?: string; authorized?: boolean };
+  let body: {
+    source?: string;
+    repositoryId?: string;
+    authorized?: boolean;
+    mode?: ScanMode;
+    lenses?: string[];
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -17,18 +24,10 @@ export async function POST(request: Request) {
     );
   }
 
-  if (body.source && body.source !== "demo") {
-    return NextResponse.json(
-      {
-        error: "This build analyzes the included demo repository. ZIP and GitHub ingestion stay in demo fallback.",
-        retry: true,
-        demo: true,
-      },
-      { status: 400 },
-    );
-  }
+  const mode: ScanMode = body.mode === "guided" ? "guided" : "auto";
+  const lenses: ThreatLens[] = (body.lenses ?? []).filter(isThreatLens);
 
-  const record = createScanRecord(true);
+  const record = createScanRecord(true, mode, lenses);
   await runSecurityAnalysis(record.id);
   return NextResponse.json({ scanId: record.id, status: record.status });
 }

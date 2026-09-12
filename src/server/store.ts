@@ -1,4 +1,5 @@
 import type { SecurityFinding } from "@/types/security";
+import type { ScanMode, ThreatLens } from "@/server/lenses";
 import type { AnalysisMode, RepositoryFile, ScanProgressEvent, ScanReport } from "@/server/types";
 
 export type ScanRecord = {
@@ -7,6 +8,8 @@ export type ScanRecord = {
   status: ScanProgressEvent["stage"] | "queued";
   progress: number;
   analysisMode: AnalysisMode;
+  scanMode: ScanMode;
+  requestedLenses: ThreatLens[];
   events: ScanProgressEvent[];
   listeners: Set<(event: ScanProgressEvent) => void>;
   files: RepositoryFile[];
@@ -22,7 +25,11 @@ const globalStore = globalThis as typeof globalThis & {
 const scans = globalStore.__c0rtexScans ?? new Map<string, ScanRecord>();
 globalStore.__c0rtexScans = scans;
 
-export function createScanRecord(authorized: boolean): ScanRecord {
+export function createScanRecord(
+  authorized: boolean,
+  scanMode: ScanMode = "auto",
+  requestedLenses: ThreatLens[] = [],
+): ScanRecord {
   const id = `scan_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   const record: ScanRecord = {
     id,
@@ -30,6 +37,8 @@ export function createScanRecord(authorized: boolean): ScanRecord {
     status: "queued",
     progress: 0,
     analysisMode: "demo",
+    scanMode,
+    requestedLenses,
     events: [],
     listeners: new Set(),
     files: [],
