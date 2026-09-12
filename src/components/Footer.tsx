@@ -16,14 +16,14 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-line bg-bg">
+    <footer className="relative overflow-hidden border-t border-black/20 bg-[#FF4A00]">
       {/* faint grid texture, Raven-style depth */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
         aria-hidden="true"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            "linear-gradient(rgba(0,0,0,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.8) 1px, transparent 1px)",
           backgroundSize: "72px 72px",
         }}
       />
@@ -31,14 +31,14 @@ export function Footer() {
       <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20">
         {/* Brand block: giant pixel wordmark, Raven "About us" style */}
         <Reveal>
-          <p className="bracket text-cyan">
+          <p className="bracket text-black/70">
             <ScrambleText text="[ c0rtex ]" />
           </p>
-          <h2 className="pixel-heading mt-4 text-[13vw] leading-[0.95] text-white sm:text-7xl lg:text-8xl">
+          <h2 className="pixel-heading mt-4 text-[13vw] leading-[0.95] !text-black sm:text-7xl lg:text-8xl">
             Think like an attacker.
             <br />
-            <span className="text-white/35">Fix like an engineer.</span>
-            <span className="pixel-asterisk" aria-hidden="true">
+            <span className="text-black/45">Fix like an engineer.</span>
+            <span className="pixel-asterisk" aria-hidden="true" style={{ color: "#ffffff" }}>
               *
             </span>
           </h2>
@@ -48,14 +48,14 @@ export function Footer() {
           {/* Careers-style CTA block, Raven "working at raven" style */}
           <Reveal delay={0.1}>
             <div className="max-w-md">
-              <p className="label text-lime">START NOW</p>
-              <p className="mt-3 text-xl font-medium leading-8 text-white">
+              <p className="label text-black">START NOW</p>
+              <p className="mt-3 text-xl font-medium leading-8 !text-black">
                 Your code has attack paths?
               </p>
-              <p className="text-xl font-medium leading-8 text-muted">
+              <p className="text-xl font-medium leading-8 text-black/65">
                 Your rivals patch slower?
               </p>
-              <p className="text-xl font-medium leading-8 text-muted">If yes — challenge us.</p>
+              <p className="text-xl font-medium leading-8 text-black/65">If yes — challenge us.</p>
               <motion.div
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -64,7 +64,7 @@ export function Footer() {
               >
                 <Link
                   href="/tool?demo=true"
-                  className="btn-primary inline-flex items-center gap-2"
+                  className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-3 font-semibold text-white transition-colors hover:bg-black/85"
                 >
                   Run the analyzer
                   <span aria-hidden="true">→</span>
@@ -81,9 +81,9 @@ export function Footer() {
                   <li key={href}>
                     <a
                       href={href}
-                      className="group flex items-baseline gap-3 text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:text-lime"
+                      className="group flex items-baseline gap-3 text-lg font-bold uppercase tracking-[0.08em] !text-black transition-colors hover:!text-white"
                     >
-                      <span className="font-mono text-[11px] font-normal text-muted transition-colors group-hover:text-lime">
+                      <span className="font-mono text-[11px] font-normal text-black/50 transition-colors group-hover:text-white">
                         [ {n} ]
                       </span>
                       {label}
@@ -96,8 +96,8 @@ export function Footer() {
         </div>
 
         {/* Bottom row: year */}
-        <div className="mt-20 flex flex-col gap-2 border-t border-line pt-6 text-xs leading-6 text-muted md:flex-row md:items-center md:justify-end">
-          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted/70">
+        <div className="mt-20 flex flex-col gap-2 border-t border-black/20 pt-6 text-xs leading-6 md:flex-row md:items-center md:justify-end">
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-black/60">
             © {new Date().getFullYear()} c0rtex
           </p>
         </div>
