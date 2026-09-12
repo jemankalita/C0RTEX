@@ -65,7 +65,7 @@ export function HeroFindingTicker() {
 
   return (
     <article
-      className="panel absolute right-6 top-8 hidden w-[248px] rounded-xl p-4 lg:block"
+      className="panel absolute left-2 top-12 hidden w-[248px] rounded-xl p-4 lg:block"
       onMouseEnter={() => undefined}
       aria-live="off"
     >
