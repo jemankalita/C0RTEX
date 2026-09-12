@@ -9,14 +9,15 @@ const steps = [
   ["Path reasoning", "The system evaluates whether user-controlled data can reach a sensitive operation."],
   ["Risk scoring", "Severity considers impact, exposure, reachability, and confidence."],
   ["Remediation", "The system proposes a minimal reviewable patch."],
-  ["Recheck", "The relevant rule is run again after the patch is applied."],
+  ["Apply and export", "A confirmed patch is written to the scan working copy. Download it and commit it in the real repo."],
+  ["Recheck", "The relevant rule is run again against the patched working copy."],
 ];
 
 export function HowItWorksPanel() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="panel rounded-2xl p-5">
+    <section className="panel p-5">
       <button
         type="button"
         className="flex w-full items-center justify-between text-left"

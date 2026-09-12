@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyDemoPatch, recheckFinding, sortFindings } from "@/lib/findingState";
 import { createDemoFindings } from "@/data/demoFindings";
+import { scoreFromFindings } from "@/lib/score";
 
 describe("finding state", () => {
   it("sorts findings by severity", () => {
@@ -18,7 +19,8 @@ describe("finding state", () => {
     expect(result.findings.find((finding) => finding.id === "missing-object-auth")?.status).toBe(
       "PATCH_APPLIED",
     );
-    expect(result.score).toBe(64);
+    expect(result.score).toBe(scoreFromFindings(result.findings));
+    expect(result.score).toBe(scoreFromFindings(original));
   });
 
   it("fails cleanly when a patch is missing", () => {
@@ -29,13 +31,17 @@ describe("finding state", () => {
   });
 
   it("resolves the primary path and raises the score on recheck", () => {
-    const patched = applyDemoPatch(createDemoFindings(), "missing-object-auth");
+    const open = createDemoFindings().filter(
+      (finding) => finding.id === "missing-object-auth" || finding.id === "unsafe-html",
+    );
+    const patched = applyDemoPatch(open, "missing-object-auth");
     if ("error" in patched) throw new Error("expected patch");
 
     const result = recheckFinding(patched.findings, "missing-object-auth");
     const primary = result.findings.find((finding) => finding.id === "missing-object-auth");
 
-    expect(result.score).toBe(86);
+    expect(result.score).toBe(scoreFromFindings(result.findings));
+    expect(result.score).toBeGreaterThan(scoreFromFindings(open));
     expect(result.resolvedPrimary).toBe(true);
     expect(primary?.status).toBe("RESOLVED");
     expect(primary?.attackPath.every((node) => node.status === "fixed")).toBe(true);

@@ -1,4 +1,5 @@
 import { createDemoFindings } from "@/data/demoFindings";
+import { impactForFinding, severityForRule } from "@/lib/score";
 import type { SecurityFinding } from "@/types/security";
 import type { FindingContext, RawFinding } from "@/server/types";
 
@@ -15,33 +16,29 @@ export function enrichWithDemoKnowledge(raw: RawFinding[], contexts: FindingCont
         ruleId: finding.ruleId,
         file: finding.file,
         line: finding.startLine,
-        codeBefore: context?.codeSnippets[0]?.content ?? known.codeBefore,
+        codeBefore: context?.codeSnippets[0]?.content ?? finding.snippet ?? known.codeBefore,
       };
     }
+
+    const severity = severityForRule(finding.ruleId);
+    const confidence = Math.round(finding.confidence * 100);
     return {
       id: finding.id,
       ruleId: finding.ruleId,
       title: finding.title,
       category: finding.category,
-      severity: "NEEDS_REVIEW",
+      severity,
       status: "OPEN",
       file: finding.file,
       line: finding.startLine,
       locationLabel: finding.route ?? finding.file,
-      confidence: Math.round(finding.confidence * 100),
+      confidence,
       reachability: "Needs review",
-      scoreImpact:
-        finding.ruleId === "unsafe-html"
-          ? -8
-          : finding.ruleId === "hardcoded-secret"
-            ? -10
-            : finding.ruleId === "sql-injection" || finding.ruleId === "missing-object-auth"
-              ? -14
-              : -6,
-      whyItMatters: "A suspicious pattern was detected, but live model reasoning was not available.",
-      attackerStory: "Deterministic analysis flagged this pattern from static source context only.",
+      scoreImpact: impactForFinding({ severity, confidence, scoreImpact: 0 }),
+      whyItMatters: "A suspicious pattern was detected from static source context.",
+      attackerStory: "Deterministic analysis flagged this pattern from the provided files only.",
       evidence: [finding.snippet],
-      limitations: ["Demo analysis mode. Live model reasoning did not run."],
+      limitations: ["Static pattern match. Confirm reachability before treating this as a confirmed exploit."],
       codeBefore: finding.snippet,
       highlightTerms: [],
       attackPath: [],

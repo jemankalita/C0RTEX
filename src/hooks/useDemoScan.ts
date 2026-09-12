@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createDemoFindings } from "@/data/demoFindings";
 import { DEMO_REPOSITORY } from "@/data/demoRepository";
-import { applyDemoPatch, recheckFinding, withFindingStatus } from "@/lib/findingState";
+import { applyDemoPatch, recheckFinding } from "@/lib/findingState";
 import { activeFindingId, resolveSelectedFinding } from "@/lib/selectFinding";
 import { ERROR_MESSAGES } from "@/lib/errors";
 import {
   applyPatch as applyRemotePatch,
   createScan,
+  downloadTextFile,
+  getPatchedFiles,
   getReport,
   getScan,
   recheckFinding as recheckRemoteFinding,
@@ -19,15 +21,14 @@ import {
 } from "@/lib/scanClient";
 import { SCAN_STAGES, isScanning } from "@/lib/scanStages";
 import {
-  categoryScoresFromStatus,
+  categoryScoresFromFindings,
   countFindingsBySeverity,
   gradeFromScore,
-  INITIAL_SCORE,
-  isPrimaryAuthorizationFinding,
+  scanConfidenceFromFindings,
   scoreFromFindings,
 } from "@/lib/score";
+import { suggestPatch } from "@/lib/suggestPatch";
 import type {
-  FindingStatus,
   ScanErrorKind,
   ScanMode,
   ScanStatus,
@@ -71,6 +72,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   const [lenses, setLenses] = useState<ThreatLens[]>([]);
   const [selectedLenses, setSelectedLenses] = useState<string[]>([]);
   const [backendStage, setBackendStage] = useState<string>("idle");
+  const [baselineScore, setBaselineScore] = useState<number | null>(null);
+  const [patchedFile, setPatchedFile] = useState<{ path: string; content: string } | null>(null);
   const [surface, setSurface] = useState({
     publicRoutes: DEMO_REPOSITORY.publicRoutes,
     authenticatedRoutes: DEMO_REPOSITORY.authenticatedRoutes,
@@ -106,14 +109,12 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   }, [findings, selectedFindingId]);
   const score = scoreFromFindings(findings);
   const counts = countFindingsBySeverity(findings);
-  const primaryStatus: FindingStatus =
-    findings.find((finding) => isPrimaryAuthorizationFinding(finding))?.status ?? "OPEN";
 
   const summary = useMemo(
     () => ({
       score,
       grade: gradeFromScore(score),
-      confidence: 89,
+      confidence: scanConfidenceFromFindings(findings),
       publicRoutes: surface.publicRoutes,
       authenticatedRoutes: surface.authenticatedRoutes,
       adminRoutes: DEMO_REPOSITORY.adminRoutes,
@@ -122,7 +123,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
       sensitiveOperations: surface.sensitiveOperations,
       ...counts,
     }),
-    [score, counts, surface],
+    [score, counts, findings, surface],
   );
 
   const loadReport = useCallback(async (id: string) => {
@@ -145,6 +146,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
       sensitiveOperations: report.sensitiveOperations,
     });
     setSelectedFindingId(report.findings[0]?.id ?? "");
+    setBaselineScore(scoreFromFindings(report.findings ?? []));
+    setPatchedFile(null);
     setStatus("report_ready");
     setToast("Threat report ready");
   }, [githubUrl, source]);
@@ -153,6 +156,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     const localFindings = createDemoFindings();
     setFindings(localFindings);
     setSelectedFindingId(localFindings[0]?.id ?? "");
+    setBaselineScore(scoreFromFindings(localFindings));
+    setPatchedFile(null);
     setStatus("preparing");
     setAnalysisMode("demo");
     setAnalysisMessage(ANALYSIS_MESSAGES[0]);
@@ -275,6 +280,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     setRepository(DEMO_REPOSITORY);
     setScanId(null);
     setAnalysisMode("demo");
+    setBaselineScore(null);
+    setPatchedFile(null);
     reportLoaded.current = false;
   }, [clearTimers]);
 
@@ -289,7 +296,18 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     if (!selectedId) return;
     setGeneratingPatch(true);
     setAnalysisMessage("Preparing remediation.");
-    setFindings((current) => withFindingStatus(current, selectedId, "UNDER_REVIEW"));
+    setFindings((current) =>
+      current.map((finding) => {
+        if (finding.id !== selectedId) return finding;
+        const suggestion = suggestPatch(finding);
+        return {
+          ...finding,
+          status: "UNDER_REVIEW" as const,
+          patch: suggestion.patch,
+          patchExplanation: suggestion.patchExplanation,
+        };
+      }),
+    );
     try {
       if (scanId) {
         const result = await requestPatch(scanId, selectedId);
@@ -320,6 +338,9 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
       if (scanId) {
         const result = await applyRemotePatch(scanId, selectedId);
         setFindings(result.findings ?? []);
+        if (result.patchedFile) {
+          setPatchedFile(result.patchedFile);
+        }
       } else {
         const result = applyDemoPatch(findings, selectedId);
         if ("error" in result) {
@@ -328,14 +349,41 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
           return;
         }
         setFindings(result.findings);
+        const target = result.findings.find((finding) => finding.id === selectedId);
+        if (target?.patch) {
+          setPatchedFile({ path: `${target.file}.diff`, content: target.patch });
+        }
       }
       setConfirmingPatch(false);
-      setToast("Patch applied to temporary demo copy.");
+      setToast("Patch applied to the scan working copy. Download it to update the real repository.");
     } catch {
       setError("patch_failure");
       setConfirmingPatch(false);
     }
   }, [findings, scanId, selectedId]);
+
+  const downloadPatchedFile = useCallback(() => {
+    if (!patchedFile && !selectedFinding?.patch) return;
+    const path = patchedFile?.path ?? selectedFinding?.file ?? "fix.diff";
+    const content = patchedFile?.content ?? selectedFinding?.patch ?? "";
+    downloadTextFile(path.replaceAll("/", "__"), content);
+  }, [patchedFile, selectedFinding]);
+
+  const downloadAllPatchedFiles = useCallback(async () => {
+    if (scanId) {
+      const result = await getPatchedFiles(scanId);
+      if (result.files.length === 0) {
+        downloadPatchedFile();
+        return;
+      }
+      const bundle = result.files
+        .map((file) => `--- ${file.path}\n${file.content}`)
+        .join("\n\n");
+      downloadTextFile("c0rtex-patched-files.txt", bundle);
+      return;
+    }
+    downloadPatchedFile();
+  }, [downloadPatchedFile, scanId]);
 
   const runRecheck = useCallback(async () => {
     if (!selectedId) return;
@@ -383,16 +431,19 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     setToast,
     analysisMessage,
     summary,
-    categoryScores: categoryScoresFromStatus(primaryStatus),
+    categoryScores: categoryScoresFromFindings(findings),
     scanning: isScanning(status),
     startScan,
     resetScan,
     generatePatch,
     applyPatch,
+    downloadPatchedFile,
+    downloadAllPatchedFiles,
+    patchedFile,
     runRecheck,
     reportReady:
       status === "report_ready" || status === "patch_ready" || status === "rechecking" || status === "resolved",
-    initialScore: INITIAL_SCORE,
+    initialScore: baselineScore ?? score,
     analysisMode,
     scanId,
     scanMode,

@@ -1,48 +1,89 @@
 import { describe, expect, it } from "vitest";
+import { createDemoFindings } from "@/data/demoFindings";
 import {
-  categoryScoresFromStatus,
+  categoryScoresFromFindings,
   countFindingsBySeverity,
   gradeFromScore,
-  INITIAL_SCORE,
-  RESOLVED_PRIMARY_SCORE,
   scoreFromFindings,
 } from "@/lib/score";
-import { createDemoFindings } from "@/data/demoFindings";
+import type { SecurityFinding } from "@/types/security";
+
+function finding(overrides: Partial<SecurityFinding> = {}): SecurityFinding {
+  return {
+    id: "sample",
+    title: "Sample",
+    category: "Injection",
+    severity: "HIGH",
+    status: "OPEN",
+    file: "src/app.ts",
+    line: 1,
+    locationLabel: "/api",
+    confidence: 90,
+    reachability: "Authenticated route",
+    scoreImpact: -12,
+    whyItMatters: "",
+    attackerStory: "",
+    evidence: [],
+    limitations: [],
+    codeBefore: "",
+    highlightTerms: [],
+    attackPath: [],
+    ...overrides,
+  };
+}
 
 describe("gradeFromScore", () => {
-  it("maps the demo scores to the advertised grades", () => {
-    expect(gradeFromScore(INITIAL_SCORE)).toBe("C");
-    expect(gradeFromScore(RESOLVED_PRIMARY_SCORE)).toBe("B");
-  });
-
-  it("uses the remaining grade bands", () => {
+  it("maps score bands", () => {
     expect(gradeFromScore(95)).toBe("A");
+    expect(gradeFromScore(84)).toBe("B");
+    expect(gradeFromScore(70)).toBe("C");
     expect(gradeFromScore(50)).toBe("D");
     expect(gradeFromScore(10)).toBe("F");
   });
 });
 
 describe("scoreFromFindings", () => {
-  it("starts at 64 and becomes 86 after the primary finding is resolved", () => {
-    const open = createDemoFindings();
-    expect(scoreFromFindings(open)).toBe(64);
-
-    const resolved = open.map((finding) =>
-      finding.id === "missing-object-auth" ? { ...finding, status: "RESOLVED" as const } : finding,
-    );
-    expect(scoreFromFindings(resolved)).toBe(86);
+  it("scores a clean repository at 100", () => {
+    expect(scoreFromFindings([])).toBe(100);
   });
 
-  it("raises the score when a non-primary finding is resolved", () => {
-    const open = createDemoFindings();
-    const xss = open.find((finding) => finding.id === "unsafe-html");
-    expect(xss).toBeTruthy();
+  it("does not hardcode 64 for every open report", () => {
+    const high = [finding({ id: "a", severity: "HIGH", scoreImpact: -12 })];
+    const mixed = [
+      finding({ id: "a", severity: "CRITICAL", scoreImpact: -18, category: "Broken Access Control" }),
+      finding({ id: "b", severity: "LOW", scoreImpact: -3, category: "Security Misconfiguration" }),
+    ];
+    expect(scoreFromFindings(high)).not.toBe(64);
+    expect(scoreFromFindings(mixed)).not.toBe(scoreFromFindings(high));
+    expect(scoreFromFindings(mixed)).toBeLessThan(scoreFromFindings(high));
+  });
 
-    const resolved = open.map((finding) =>
-      finding.id === "unsafe-html" ? { ...finding, status: "RESOLVED" as const } : finding,
+  it("raises the score only after a finding is resolved, not merely patched", () => {
+    const open = [finding({ id: "xss", severity: "MEDIUM", scoreImpact: -8 })];
+    const patched = [{ ...open[0], status: "PATCH_APPLIED" as const }];
+    const resolved = [{ ...open[0], status: "RESOLVED" as const }];
+
+    expect(scoreFromFindings(open)).toBe(scoreFromFindings(patched));
+    expect(scoreFromFindings(resolved)).toBe(100);
+    expect(scoreFromFindings(resolved)).toBeGreaterThan(scoreFromFindings(open));
+  });
+
+  it("recovers exactly the resolved finding's impact", () => {
+    const open = [
+      finding({ id: "missing-object-auth", severity: "CRITICAL", scoreImpact: -18 }),
+      finding({ id: "xss", severity: "MEDIUM", scoreImpact: -8 }),
+    ];
+    const resolved = open.map((item) =>
+      item.id === "missing-object-auth" ? { ...item, status: "RESOLVED" as const } : item,
     );
-    expect(scoreFromFindings(resolved)).toBe(INITIAL_SCORE + Math.abs(xss!.scoreImpact));
-    expect(scoreFromFindings(resolved)).toBeGreaterThan(INITIAL_SCORE);
+
+    expect(scoreFromFindings(open)).toBe(80);
+    expect(scoreFromFindings(resolved)).toBe(92);
+    expect(scoreFromFindings(resolved)).toBeGreaterThan(scoreFromFindings(open));
+  });
+
+  it("scores the full demo corpus below the old canned 64 while issues remain", () => {
+    expect(scoreFromFindings(createDemoFindings())).toBeLessThan(64);
   });
 });
 
@@ -51,16 +92,28 @@ describe("countFindingsBySeverity", () => {
     const findings = createDemoFindings();
     expect(countFindingsBySeverity(findings)).toEqual({ high: 5, medium: 6, low: 3 });
 
-    const resolvedPrimary = findings.map((finding) =>
-      finding.id === "missing-object-auth" ? { ...finding, status: "RESOLVED" as const } : finding,
+    const resolvedPrimary = findings.map((item) =>
+      item.id === "missing-object-auth" ? { ...item, status: "RESOLVED" as const } : item,
     );
     expect(countFindingsBySeverity(resolvedPrimary)).toEqual({ high: 4, medium: 6, low: 3 });
   });
 });
 
-describe("categoryScoresFromStatus", () => {
-  it("improves authorization after the primary finding is resolved", () => {
-    expect(categoryScoresFromStatus("OPEN").authorization).toBe(48);
-    expect(categoryScoresFromStatus("RESOLVED").authorization).toBe(88);
+describe("categoryScoresFromFindings", () => {
+  it("derives category scores from the findings that remain open", () => {
+    const open = [
+      finding({
+        id: "authz",
+        category: "Broken Access Control",
+        severity: "CRITICAL",
+        scoreImpact: -18,
+      }),
+    ];
+    const resolved = [{ ...open[0], status: "RESOLVED" as const }];
+
+    expect(categoryScoresFromFindings(open).authorization).toBeLessThan(
+      categoryScoresFromFindings(resolved).authorization,
+    );
+    expect(categoryScoresFromFindings([]).secrets).toBe(100);
   });
 });
