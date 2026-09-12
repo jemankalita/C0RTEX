@@ -2,12 +2,25 @@ import { extractContext } from "@/server/context/extractContext";
 import { getServerEnv } from "@/server/env";
 import { enrichWithDemoKnowledge } from "@/server/fallback/enrichFindings";
 import { runSpecializedAgents } from "@/server/agents/runAgents";
-import { findingsForLenses, selectThreatLenses } from "@/server/lenses";
+import { findingsForLenses, selectThreatLenses, THREAT_LENSES } from "@/server/lenses";
 import { getLLMProvider } from "@/server/llm/provider";
 import { loadExistingDemoRepository } from "@/server/repository/loadDemoRepository";
+import { loadGitHubRepository } from "@/server/repository/loadGitHubRepository";
 import { scanRepository } from "@/server/scanner/scanRepository";
 import { emitScanEvent, getScanRecord } from "@/server/store";
 import type { ScanReport } from "@/server/types";
+
+const running = new Set<string>();
+
+export function ensureScanStarted(scanId: string) {
+  if (running.has(scanId)) return;
+  const record = getScanRecord(scanId);
+  if (!record || record.status !== "queued") return;
+  running.add(scanId);
+  void runSecurityAnalysis(scanId).finally(() => {
+    running.delete(scanId);
+  });
+}
 
 export async function runSecurityAnalysis(scanId: string) {
   const record = getScanRecord(scanId);
@@ -30,18 +43,27 @@ export async function runSecurityAnalysis(scanId: string) {
   };
 
   try {
-    emit("preparing", "Preparing the authorized demo repository.", 8);
-    const repository = await loadExistingDemoRepository();
+    const fromGitHub = record.source === "github" && Boolean(record.githubUrl);
+    emit(
+      "preparing",
+      fromGitHub ? "Fetching the authorized GitHub repository." : "Preparing the authorized demo repository.",
+      8,
+    );
+    const repository = fromGitHub
+      ? await loadGitHubRepository(record.githubUrl!)
+      : await loadExistingDemoRepository();
     record.files = repository.files.map((file) => ({ ...file }));
 
-    emit("mapping", "Mapping application structure.", 22);
+    emit("mapping", `Mapping ${repository.name} (${repository.files.length} files).`, 22);
     const raw = scanRepository(repository);
-    emit("detecting", "Deterministic rules finished.", 38, { status: "complete" });
+    emit("detecting", `Deterministic rules flagged ${raw.length} candidate(s).`, 38, { status: "complete" });
 
     const selectedLenses =
       record.scanMode === "guided" && record.requestedLenses.length > 0
         ? record.requestedLenses
-        : selectThreatLenses(repository, raw);
+        : fromGitHub
+          ? [...THREAT_LENSES]
+          : selectThreatLenses(repository, raw);
     const scoped = findingsForLenses(raw, selectedLenses);
     emit("tracing", `Selected lenses: ${selectedLenses.join(", ")}.`, 52);
 
@@ -50,7 +72,7 @@ export async function runSecurityAnalysis(scanId: string) {
     const provider = getLLMProvider();
     record.analysisMode = provider ? "live" : "demo";
 
-    emit("reasoning", "Running selected security lenses.", 64);
+    emit("reasoning", "Running selected security lenses in parallel.", 64);
     const agents = await runSpecializedAgents({
       repository,
       findings: scoped,
@@ -64,8 +86,17 @@ export async function runSecurityAnalysis(scanId: string) {
 
     emit("synthesizing", "Merging agent results.", 82);
     const failedAgents = agents.filter((agent) => agent.status === "failed").map((agent) => agent.agent);
-    const findings = enrichWithDemoKnowledge(scoped, contexts).map((finding) => ({
+    const discovered = agents.flatMap((agent) => agent.findings ?? []);
+    const mergedRaw = [...scoped];
+    for (const finding of discovered) {
+      if (mergedRaw.some((item) => item.file === finding.file && item.snippet === finding.snippet)) continue;
+      if (!repository.files.some((file) => file.path === finding.file)) continue;
+      mergedRaw.push(finding);
+    }
+
+    const findings = enrichWithDemoKnowledge(mergedRaw, contexts).map((finding) => ({
       ...finding,
+      ruleId: finding.ruleId ?? mergedRaw.find((item) => item.id === finding.id)?.ruleId,
       limitations: [
         ...finding.limitations,
         record.analysisMode === "demo"
@@ -85,6 +116,8 @@ export async function runSecurityAnalysis(scanId: string) {
       selectedLenses,
       agents,
       findings,
+      repositoryName: repository.name,
+      fileCount: repository.files.length,
       limitations: [
         record.analysisMode === "demo"
           ? "Demo analysis mode — live AI reasoning is not configured."
@@ -92,19 +125,23 @@ export async function runSecurityAnalysis(scanId: string) {
         "This score is a risk-prioritization signal, not a security guarantee.",
         `Selected lenses: ${selectedLenses.join(", ")}.`,
         `Concurrency limit: ${env.concurrency}.`,
+        fromGitHub ? `Source: GitHub ${repository.name}.` : "Source: built-in demo repository.",
       ],
       failedAgents,
-      publicRoutes: Number(recon?.extra?.publicRoutes ?? 8),
-      authenticatedRoutes: Number(recon?.extra?.authenticatedRoutes ?? 11),
-      databaseSinks: Number(recon?.extra?.databaseSinks ?? 7),
-      sensitiveOperations: Number(recon?.extra?.sensitiveOperations ?? 5),
+      publicRoutes: Number(recon?.extra?.publicRoutes ?? Math.max(1, Math.round(repository.files.length / 4))),
+      authenticatedRoutes: Number(recon?.extra?.authenticatedRoutes ?? Math.max(1, Math.round(repository.files.length / 3))),
+      databaseSinks: Number(recon?.extra?.databaseSinks ?? scoped.filter((item) => item.ruleId.includes("sql")).length),
+      sensitiveOperations: Number(recon?.extra?.sensitiveOperations ?? findings.length),
     };
 
     record.findings = findings;
     record.report = report;
     emit("report_ready", "Threat report ready.", 100, { status: "complete" });
-  } catch {
-    record.error = "The scan could not complete. Retry the scan or use the built-in demo.";
+  } catch (error) {
+    record.error =
+      error instanceof Error
+        ? error.message
+        : "The scan could not complete. Retry the scan or use the built-in demo.";
     emit("error", record.error, record.progress, { status: "failed" });
   }
 }

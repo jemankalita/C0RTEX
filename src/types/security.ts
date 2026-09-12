@@ -38,6 +38,7 @@ export type AttackPathNode = {
 
 export type SecurityFinding = {
   id: string;
+  ruleId?: string;
   title: string;
   category: string;
   severity: FindingSeverity;

@@ -76,6 +76,8 @@ export function ToolPage() {
           onSourceChange={scan.setSource}
           authorized={scan.authorized}
           onStart={scan.startScan}
+          githubUrl={scan.githubUrl}
+          onGithubUrlChange={scan.setGithubUrl}
           demoMode={demoMode}
           skipAnimation={scan.skipAnimation}
           onSkipAnimationChange={scan.setSkipAnimation}
@@ -130,7 +132,7 @@ export function ToolPage() {
           {tab === "Findings" ? (
             <FindingsList
               findings={sorted}
-              selectedId={scan.selectedFinding.id}
+              selectedId={scan.selectedFinding?.id ?? ""}
               onSelect={(id) => {
                 scan.setSelectedFindingId(id);
                 setTab("Attack path");
@@ -187,7 +189,7 @@ export function ToolPage() {
             {scan.reportReady ? (
               <FindingsList
                 findings={sorted}
-                selectedId={scan.selectedFinding.id}
+                selectedId={scan.selectedFinding?.id ?? ""}
                 onSelect={scan.setSelectedFindingId}
               />
             ) : null}

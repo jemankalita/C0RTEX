@@ -9,6 +9,8 @@ export type ScanRecord = {
   progress: number;
   analysisMode: AnalysisMode;
   scanMode: ScanMode;
+  source: "demo" | "github";
+  githubUrl?: string;
   requestedLenses: ThreatLens[];
   events: ScanProgressEvent[];
   listeners: Set<(event: ScanProgressEvent) => void>;
@@ -29,6 +31,8 @@ export function createScanRecord(
   authorized: boolean,
   scanMode: ScanMode = "auto",
   requestedLenses: ThreatLens[] = [],
+  source: "demo" | "github" = "demo",
+  githubUrl?: string,
 ): ScanRecord {
   const id = `scan_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   const record: ScanRecord = {
@@ -38,6 +42,8 @@ export function createScanRecord(
     progress: 0,
     analysisMode: "demo",
     scanMode,
+    source,
+    githubUrl,
     requestedLenses,
     events: [],
     listeners: new Set(),

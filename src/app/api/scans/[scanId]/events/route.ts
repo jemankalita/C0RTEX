@@ -1,7 +1,9 @@
+import { ensureScanStarted } from "@/server/orchestrator";
 import { getScanRecord, subscribeScan } from "@/server/store";
 
 export async function GET(request: Request, context: { params: Promise<{ scanId: string }> }) {
   const { scanId } = await context.params;
+  ensureScanStarted(scanId);
   const record = getScanRecord(scanId);
   if (!record) {
     return new Response(JSON.stringify({ error: "Scan not found.", retry: true, demo: true }), {

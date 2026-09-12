@@ -15,11 +15,21 @@ const LENS_AGENTS: Record<ThreatLens, string> = {
 
 function relevantFindings(name: string, findings: RawFinding[]) {
   return findings.filter((finding) => {
-    if (name === "injection") return finding.ruleId === "sql-injection";
-    if (name === "access-control") return finding.ruleId === "missing-object-auth";
-    if (name === "secrets") return finding.ruleId === "hardcoded-secret";
-    if (name === "configuration") return finding.ruleId === "wildcard-cors";
-    if (name === "browser-safety") return finding.ruleId === "unsafe-html";
+    if (name === "injection") {
+      return ["sql-injection", "command-injection", "path-traversal", "ssrf"].includes(finding.ruleId);
+    }
+    if (name === "access-control") {
+      return ["missing-object-auth", "mass-assignment", "auth-fallback"].includes(finding.ruleId);
+    }
+    if (name === "secrets") {
+      return ["hardcoded-secret", "insecure-jwt"].includes(finding.ruleId);
+    }
+    if (name === "configuration") {
+      return ["wildcard-cors", "debug-env", "insecure-cookie"].includes(finding.ruleId);
+    }
+    if (name === "browser-safety") {
+      return ["unsafe-html", "open-redirect"].includes(finding.ruleId);
+    }
     return true;
   });
 }
@@ -59,25 +69,65 @@ async function liveAgent(
   repository: LoadedRepository,
   contexts: FindingContext[],
 ): Promise<AgentResult> {
+  const excerpts = repository.files.slice(0, 16).map((file) => ({
+    path: file.path,
+    content: file.content.slice(0, 2400),
+  }));
   const payload = await provider.generateStructured<{
     summary?: string;
     limitations?: string[];
-  }>(UNTRUSTED, JSON.stringify({
-    agent: name,
-    repository: repository.name,
-    contexts: contexts.map((item) => ({
-      id: item.finding.id,
-      title: item.finding.title,
-      snippet: item.finding.snippet,
-      file: item.finding.file,
-      code: item.codeSnippets,
-    })),
-  }));
+    findings?: Array<{
+      title?: string;
+      file?: string;
+      line?: number;
+      snippet?: string;
+      category?: string;
+    }>;
+  }>(
+    UNTRUSTED,
+    JSON.stringify({
+      agent: name,
+      task: "Identify concrete security issues for this lens from the provided files only. Do not invent files. Do not produce exploit payloads.",
+      repository: repository.name,
+      known: contexts.map((item) => ({
+        id: item.finding.id,
+        title: item.finding.title,
+        snippet: item.finding.snippet,
+        file: item.finding.file,
+        code: item.codeSnippets,
+      })),
+      files: excerpts,
+    }),
+  );
+
+  const findings = (payload.findings ?? [])
+    .filter((item) => item.file && repository.files.some((file) => file.path === item.file))
+    .map((item, index) => ({
+      id: `live-${name}-${index + 1}`,
+      ruleId:
+        name === "injection"
+          ? "sql-injection"
+          : name === "access-control"
+            ? "missing-object-auth"
+            : name === "secrets"
+              ? "hardcoded-secret"
+              : name === "browser-safety"
+                ? "unsafe-html"
+                : "wildcard-cors",
+      category: item.category ?? name,
+      title: item.title ?? `${name} finding`,
+      file: item.file!,
+      startLine: item.line ?? 1,
+      endLine: item.line ?? 1,
+      snippet: item.snippet ?? "",
+      confidence: 0.7,
+    }));
 
   return {
     agent: name,
     status: "complete",
     summary: payload.summary ?? `${name} completed live analysis.`,
+    findings,
     extra: { limitations: payload.limitations ?? [] },
   };
 }

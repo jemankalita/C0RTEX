@@ -32,6 +32,18 @@ describe("scoreFromFindings", () => {
     );
     expect(scoreFromFindings(resolved)).toBe(86);
   });
+
+  it("raises the score when a non-primary finding is resolved", () => {
+    const open = createDemoFindings();
+    const xss = open.find((finding) => finding.id === "unsafe-html");
+    expect(xss).toBeTruthy();
+
+    const resolved = open.map((finding) =>
+      finding.id === "unsafe-html" ? { ...finding, status: "RESOLVED" as const } : finding,
+    );
+    expect(scoreFromFindings(resolved)).toBe(INITIAL_SCORE + Math.abs(xss!.scoreImpact));
+    expect(scoreFromFindings(resolved)).toBeGreaterThan(INITIAL_SCORE);
+  });
 });
 
 describe("countFindingsBySeverity", () => {

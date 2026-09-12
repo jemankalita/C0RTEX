@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { ensureScanStarted } from "@/server/orchestrator";
 import { getScanRecord } from "@/server/store";
 
 export async function GET(_request: Request, context: { params: Promise<{ scanId: string }> }) {
   const { scanId } = await context.params;
+  ensureScanStarted(scanId);
   const record = getScanRecord(scanId);
   if (!record) {
     return NextResponse.json({ error: "Scan not found.", retry: true, demo: true }, { status: 404 });

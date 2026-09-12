@@ -16,7 +16,8 @@ const RULES: Rule[] = [
     category: "Broken Access Control",
     confidence: 0.93,
     test: (_file, line, content) =>
-      line.includes("findById(req.params.id)") && content.includes("requireAuth"),
+      (line.includes("findById(req.params.id)") && content.includes("requireAuth")) ||
+      /(findById|findOne|findUnique)\(\s*(req\.(params|query)|params)\./.test(line),
     extras: () => ({
       route: "/api/orders/:id",
       source: "req.params.id",
@@ -30,7 +31,8 @@ const RULES: Rule[] = [
     confidence: 0.88,
     test: (_file, line) =>
       /query\(`[^`]*\$\{req\.(query|body|params)\./.test(line) ||
-      /LIKE '%\$\{req\.query/.test(line),
+      /LIKE '%\$\{req\.query/.test(line) ||
+      /\.(query|execute)\([`'"][^`'"]*\$\{/.test(line),
     extras: () => ({
       route: "/api/search",
       source: "req.query.q",
@@ -42,7 +44,9 @@ const RULES: Rule[] = [
     title: "Possible command injection",
     category: "Injection",
     confidence: 0.87,
-    test: (_file, line) => /run\(`[^`]*\$\{req\.(query|body|params)\./.test(line),
+    test: (_file, line) =>
+      /run\(`[^`]*\$\{req\.(query|body|params)\./.test(line) ||
+      /\b(exec|execSync|spawn)\([^)]*\$\{/.test(line),
     extras: () => ({
       route: "/api/admin/export",
       source: "req.query.path",
@@ -54,7 +58,9 @@ const RULES: Rule[] = [
     title: "Unvalidated file path",
     category: "Injection",
     confidence: 0.84,
-    test: (_file, line) => /readFile\(`[^`]*\$\{req\.(query|body|params)\./.test(line),
+    test: (_file, line) =>
+      /readFile(Sync)?\(`[^`]*\$\{req\.(query|body|params)\./.test(line) ||
+      /readFile(Sync)?\([^)]*\$\{/.test(line),
     extras: () => ({
       route: "/api/files/invoice",
       source: "req.query.name",
@@ -66,7 +72,7 @@ const RULES: Rule[] = [
     title: "User-controlled outbound fetch",
     category: "Injection",
     confidence: 0.83,
-    test: (_file, line) => /fetch\(req\.(query|body|params)\./.test(line),
+    test: (_file, line) => /fetch\(\s*(req\.(query|body|params)|params)\./.test(line),
     extras: () => ({
       route: "/api/webhooks/preview",
       source: "req.query.url",
@@ -120,7 +126,10 @@ const RULES: Rule[] = [
     title: "Hardcoded service secret",
     category: "Cryptographic/Secret Management",
     confidence: 0.9,
-    test: (_file, line) => /sk_[a-zA-Z0-9_]+/.test(line) || /apiKey:\s*["']sk_/.test(line),
+    test: (_file, line) =>
+      /sk_[a-zA-Z0-9_]+/.test(line) ||
+      /apiKey:\s*["']sk_/.test(line) ||
+      /(api[_-]?key|secret|password)\s*[:=]\s*["'][^"']{10,}/i.test(line),
     extras: () => ({ sink: "PaymentClient" }),
   },
   {
@@ -137,7 +146,10 @@ const RULES: Rule[] = [
     title: "Unsafe HTML rendering",
     category: "Injection/XSS",
     confidence: 0.76,
-    test: (_file, line) => line.includes("dangerouslySetInnerHTML"),
+    test: (_file, line) =>
+      line.includes("dangerouslySetInnerHTML") ||
+      /\.innerHTML\s*=/.test(line) ||
+      /document\.write\s*\(/.test(line),
     extras: () => ({ sink: "dangerouslySetInnerHTML" }),
   },
   {
@@ -169,9 +181,9 @@ export function scanRepository(repository: LoadedRepository): RawFinding[] {
     lines.forEach((line, index) => {
       for (const rule of RULES) {
         if (!rule.test(file.path, line, file.content)) continue;
-        if (findings.some((item) => item.id === rule.id)) continue;
+        const id = findings.some((item) => item.id === rule.id) ? `${rule.id}:${file.path}:${index + 1}` : rule.id;
         findings.push({
-          id: rule.id,
+          id,
           ruleId: rule.id,
           category: rule.category,
           title: rule.title,
@@ -189,13 +201,22 @@ export function scanRepository(repository: LoadedRepository): RawFinding[] {
   return findings;
 }
 
-export function scanFileForRule(filePath: string, content: string, ruleId: string) {
-  const fakeRepo: LoadedRepository = {
-    id: "temp",
-    name: "temp",
-    language: "TypeScript",
-    files: [{ path: filePath, content }],
-    metadata: { language: "TypeScript", fileCount: 1 },
-  };
-  return scanRepository(fakeRepo).some((finding) => finding.ruleId === ruleId);
+export function scanFileForRule(filePath: string, content: string, ruleId: string, line?: number) {
+  const rule = RULES.find((item) => item.id === ruleId);
+  if (!rule) {
+    const fakeRepo: LoadedRepository = {
+      id: "temp",
+      name: "temp",
+      language: "TypeScript",
+      files: [{ path: filePath, content }],
+      metadata: { language: "TypeScript", fileCount: 1 },
+    };
+    return scanRepository(fakeRepo).some((finding) => finding.ruleId === ruleId);
+  }
+
+  const lines = content.split(/\r?\n/);
+  if (typeof line === "number") {
+    return rule.test(filePath, lines[line - 1] ?? "", content);
+  }
+  return lines.some((entry) => rule.test(filePath, entry, content));
 }

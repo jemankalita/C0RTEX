@@ -19,4 +19,20 @@ describe("scanRepository", () => {
       "src/routes/orders.ts",
     );
   });
+
+  it("flags generic unsafe HTML in a live repository file", () => {
+    const findings = scanRepository({
+      id: "live",
+      name: "live",
+      language: "TypeScript",
+      files: [
+        {
+          path: "src/Review.tsx",
+          content: "export function Review({ html }: { html: string }) {\n  return <div dangerouslySetInnerHTML={{ __html: html }} />;\n}\n",
+        },
+      ],
+      metadata: { language: "TypeScript", fileCount: 1 },
+    });
+    expect(findings.some((finding) => finding.ruleId === "unsafe-html")).toBe(true);
+  });
 });
