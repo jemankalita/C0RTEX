@@ -7,5 +7,8 @@ export async function GET(_request: Request, context: { params: Promise<{ scanId
   if (!record?.report) {
     return NextResponse.json({ error: "Report is not ready.", retry: true, demo: true }, { status: 404 });
   }
-  return NextResponse.json(record.report);
+  return NextResponse.json({
+    ...record.report,
+    findings: record.findings.length > 0 ? record.findings : record.report.findings,
+  });
 }

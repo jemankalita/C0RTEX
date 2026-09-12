@@ -46,6 +46,9 @@ export async function POST(request: Request, context: { params: Promise<{ scanId
 
   record.files = record.files.map((item) => (item.path === file.path ? { ...item, content: applied.content } : item));
   record.findings = withFindingStatus(record.findings, findingId, "PATCH_APPLIED");
+  if (record.report) {
+    record.report = { ...record.report, findings: record.findings };
+  }
   emitScanEvent(record, {
     stage: "patching",
     label: "Patch applied to the temporary demo copy.",

@@ -103,6 +103,15 @@ export type DemoRepository = {
 
 export type SourceKind = "demo" | "zip" | "github";
 
+export type ScanMode = "auto" | "guided";
+
+export type ThreatLens =
+  | "access-control"
+  | "injection"
+  | "browser-safety"
+  | "secrets"
+  | "configuration";
+
 export type ScanErrorKind =
   | "unsupported_type"
   | "too_large"

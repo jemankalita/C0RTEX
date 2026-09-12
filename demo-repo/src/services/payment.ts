@@ -9,3 +9,7 @@ const client = new PaymentClient({
 export function getPaymentClient() {
   return client;
 }
+
+export async function chargeOrder(orderId: string, amount: number) {
+  return { orderId, amount, provider: "demo-pay", status: "queued" };
+}

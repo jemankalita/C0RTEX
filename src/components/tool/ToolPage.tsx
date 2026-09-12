@@ -32,8 +32,18 @@ export function ToolPage() {
   const sorted = useMemo(() => sortFindings(scan.findings), [scan.findings]);
   const stage = SCAN_STAGES.find((item) => item.id === scan.status);
   const robotStatus =
-    stage?.robotStatus ??
-    (scan.status === "resolved" ? "RESOLVED" : scan.status === "rechecking" ? "RECHECKING" : "IDLE");
+    scan.backendStage === "detecting"
+      ? "SCANNING"
+      : scan.backendStage === "synthesizing"
+        ? "SYNTHESIZING"
+        : scan.backendStage === "patching"
+          ? "PATCHING"
+          : (stage?.robotStatus ??
+            (scan.status === "resolved"
+              ? "RESOLVED"
+              : scan.status === "rechecking"
+                ? "RECHECKING"
+                : "IDLE"));
   const started = scan.status !== "idle";
 
   return (
@@ -41,7 +51,10 @@ export function ToolPage() {
       <ToolNavbar onNewScan={scan.resetScan} />
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 md:px-6">
         {scan.analysisMode === "demo" && scan.status !== "idle" ? (
-          <p className="text-xs text-muted">Demo analysis mode.</p>
+          <p className="text-xs text-muted">Demo analysis mode — live AI reasoning is not configured.</p>
+        ) : null}
+        {scan.selectedLenses.length > 0 ? (
+          <p className="text-xs text-muted">Lenses: {scan.selectedLenses.join(", ")}</p>
         ) : null}
         {scan.toast ? (
           <p className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-2 text-sm text-lime" aria-live="polite">
@@ -51,6 +64,9 @@ export function ToolPage() {
         {scan.errorMessage ? (
           <p className="rounded-xl border border-threat/40 bg-threat/10 px-4 py-2 text-sm" role="alert">
             {scan.errorMessage}
+            <button type="button" className="ml-3 underline" onClick={scan.startScan}>
+              Run demo fallback
+            </button>
           </p>
         ) : null}
 
@@ -64,6 +80,10 @@ export function ToolPage() {
           skipAnimation={scan.skipAnimation}
           onSkipAnimationChange={scan.setSkipAnimation}
           compact={started}
+          scanMode={scan.scanMode}
+          onScanModeChange={scan.setScanMode}
+          lenses={scan.lenses}
+          onLensesChange={scan.setLenses}
         />
         {started ? null : (
           <AuthorizationNotice

@@ -21,9 +21,19 @@ export function countFindingsBySeverity(findings: SecurityFinding[]) {
   };
 }
 
+export function isPrimaryAuthorizationFinding(finding: Pick<SecurityFinding, "id" | "title">): boolean {
+  return (
+    finding.id === PRIMARY_FINDING_ID ||
+    finding.id.includes("missing-object-auth") ||
+    finding.title.toLowerCase().includes("object authorization")
+  );
+}
+
 export function scoreFromFindings(findings: SecurityFinding[]): number {
-  const primary = findings.find((finding) => finding.id === PRIMARY_FINDING_ID);
-  if (primary?.status === "RESOLVED") {
+  const primaryResolved = findings.some(
+    (finding) => finding.status === "RESOLVED" && isPrimaryAuthorizationFinding(finding),
+  );
+  if (primaryResolved) {
     return RESOLVED_PRIMARY_SCORE;
   }
   return INITIAL_SCORE;

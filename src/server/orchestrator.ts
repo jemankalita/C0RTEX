@@ -2,8 +2,9 @@ import { extractContext } from "@/server/context/extractContext";
 import { getServerEnv } from "@/server/env";
 import { enrichWithDemoKnowledge } from "@/server/fallback/enrichFindings";
 import { runSpecializedAgents } from "@/server/agents/runAgents";
+import { findingsForLenses, selectThreatLenses } from "@/server/lenses";
 import { getLLMProvider } from "@/server/llm/provider";
-import { loadDemoRepository } from "@/server/repository/loadDemoRepository";
+import { loadExistingDemoRepository } from "@/server/repository/loadDemoRepository";
 import { scanRepository } from "@/server/scanner/scanRepository";
 import { emitScanEvent, getScanRecord } from "@/server/store";
 import type { ScanReport } from "@/server/types";
@@ -30,26 +31,32 @@ export async function runSecurityAnalysis(scanId: string) {
 
   try {
     emit("preparing", "Preparing the authorized demo repository.", 8);
-    const repository = await loadDemoRepository();
+    const repository = await loadExistingDemoRepository();
     record.files = repository.files.map((file) => ({ ...file }));
 
     emit("mapping", "Mapping application structure.", 22);
     const raw = scanRepository(repository);
     emit("detecting", "Deterministic rules finished.", 38, { status: "complete" });
 
-    const contexts = raw.map((finding) => extractContext(repository, finding));
-    emit("tracing", "Collected source-to-sink context.", 52);
+    const selectedLenses =
+      record.scanMode === "guided" && record.requestedLenses.length > 0
+        ? record.requestedLenses
+        : selectThreatLenses(repository, raw);
+    const scoped = findingsForLenses(raw, selectedLenses);
+    emit("tracing", `Selected lenses: ${selectedLenses.join(", ")}.`, 52);
 
+    const contexts = scoped.map((finding) => extractContext(repository, finding));
     const env = getServerEnv();
     const provider = getLLMProvider();
     record.analysisMode = provider ? "live" : "demo";
 
-    emit("reasoning", "Specialized agents are reviewing context.", 64);
+    emit("reasoning", "Running selected security lenses.", 64);
     const agents = await runSpecializedAgents({
       repository,
-      findings: raw,
+      findings: scoped,
       contexts,
       provider,
+      lenses: selectedLenses,
       onAgent: (agent, status) => {
         emit("reasoning", `${agent} ${status}.`, 70, { agent, status });
       },
@@ -57,11 +64,14 @@ export async function runSecurityAnalysis(scanId: string) {
 
     emit("synthesizing", "Merging agent results.", 82);
     const failedAgents = agents.filter((agent) => agent.status === "failed").map((agent) => agent.agent);
-    const findings = enrichWithDemoKnowledge(raw, contexts).map((finding) => ({
+    const findings = enrichWithDemoKnowledge(scoped, contexts).map((finding) => ({
       ...finding,
       limitations: [
         ...finding.limitations,
-        record.analysisMode === "demo" ? "Demo analysis mode." : "Live model reasoning used only provided context.",
+        record.analysisMode === "demo"
+          ? "Demo analysis mode — live AI reasoning is not configured."
+          : "Live model reasoning used only provided context.",
+        "This recheck verifies the selected rule and path. It does not prove that the entire application is secure.",
         ...failedAgents.map((agent) => `${agent} returned a partial or failed result.`),
       ],
     }));
@@ -71,12 +81,16 @@ export async function runSecurityAnalysis(scanId: string) {
     const report: ScanReport = {
       scanId,
       analysisMode: record.analysisMode,
+      scanMode: record.scanMode,
+      selectedLenses,
+      agents,
       findings,
       limitations: [
         record.analysisMode === "demo"
-          ? "Demo analysis mode. Live model reasoning did not run."
+          ? "Demo analysis mode — live AI reasoning is not configured."
           : "Live analysis used Gemini with repository excerpts only.",
         "This score is a risk-prioritization signal, not a security guarantee.",
+        `Selected lenses: ${selectedLenses.join(", ")}.`,
         `Concurrency limit: ${env.concurrency}.`,
       ],
       failedAgents,

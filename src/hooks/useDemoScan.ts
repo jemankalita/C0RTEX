@@ -26,9 +26,11 @@ import {
 import type {
   FindingStatus,
   ScanErrorKind,
+  ScanMode,
   ScanStatus,
   SecurityFinding,
   SourceKind,
+  ThreatLens,
 } from "@/types/security";
 
 const ANALYSIS_MESSAGES = [
@@ -60,6 +62,10 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   const [analysisMessage, setAnalysisMessage] = useState(ANALYSIS_MESSAGES[0]);
   const [scanId, setScanId] = useState<string | null>(null);
   const [analysisMode, setAnalysisMode] = useState<"demo" | "live">("demo");
+  const [scanMode, setScanMode] = useState<ScanMode>("auto");
+  const [lenses, setLenses] = useState<ThreatLens[]>([]);
+  const [selectedLenses, setSelectedLenses] = useState<string[]>([]);
+  const [backendStage, setBackendStage] = useState<string>("idle");
   const [surface, setSurface] = useState({
     publicRoutes: DEMO_REPOSITORY.publicRoutes,
     authenticatedRoutes: DEMO_REPOSITORY.authenticatedRoutes,
@@ -68,6 +74,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   });
   const timers = useRef<number[]>([]);
   const stopEvents = useRef<(() => void) | null>(null);
+  const reportLoaded = useRef(false);
 
   const clearTimers = useCallback(() => {
     timers.current.forEach((timer) => window.clearTimeout(timer));
@@ -82,7 +89,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   const score = scoreFromFindings(findings);
   const counts = countFindingsBySeverity(findings);
   const primaryStatus: FindingStatus =
-    findings.find((finding) => finding.id === "missing-object-auth")?.status ?? "OPEN";
+    findings.find((finding) => isPrimaryAuthorizationFinding(finding))?.status ?? "OPEN";
 
   const summary = useMemo(
     () => ({
@@ -104,6 +111,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     const report = await getReport(id);
     setFindings(report.findings);
     setAnalysisMode(report.analysisMode);
+    setSelectedLenses(report.selectedLenses ?? []);
     setSurface({
       publicRoutes: report.publicRoutes,
       authenticatedRoutes: report.authenticatedRoutes,
@@ -145,9 +153,10 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     setPatchVisible(false);
     setStatus("preparing");
     setAnalysisMessage(ANALYSIS_MESSAGES[0]);
+    reportLoaded.current = false;
 
     try {
-      const created = await createScan(true);
+      const created = await createScan(true, scanMode, lenses);
       setScanId(created.scanId);
 
       if (skipAnimation) {
@@ -163,9 +172,11 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
       }
 
       stopEvents.current = subscribeScanEvents(created.scanId, (event) => {
+        setBackendStage(event.stage);
         setStatus(toUiStatus(event.stage));
         setAnalysisMessage(event.detail ?? event.label);
-        if (event.stage === "report_ready") {
+        if (event.stage === "report_ready" && !reportLoaded.current) {
+          reportLoaded.current = true;
           void loadReport(created.scanId);
         }
         if (event.stage === "error") {
@@ -175,7 +186,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     } catch {
       startLocalFallback();
     }
-  }, [authorized, clearTimers, loadReport, skipAnimation, startLocalFallback]);
+  }, [authorized, clearTimers, lenses, loadReport, scanMode, skipAnimation, startLocalFallback]);
 
   const resetScan = useCallback(() => {
     clearTimers();
@@ -190,6 +201,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     setSource("demo");
     setScanId(null);
     setAnalysisMode("demo");
+    reportLoaded.current = false;
   }, [clearTimers]);
 
   const selectFinding = useCallback((id: string) => {
@@ -302,5 +314,11 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     initialScore: INITIAL_SCORE,
     analysisMode,
     scanId,
+    scanMode,
+    setScanMode,
+    lenses,
+    setLenses,
+    selectedLenses,
+    backendStage,
   };
 }

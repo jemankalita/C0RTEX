@@ -27,6 +27,10 @@ async function walk(root: string, current: string): Promise<RepositoryFile[]> {
   return files;
 }
 
+export async function loadExistingDemoRepository(): Promise<LoadedRepository> {
+  return loadDemoRepository();
+}
+
 export async function loadDemoRepository(): Promise<LoadedRepository> {
   const root = path.join(process.cwd(), "demo-repo");
   const files = await walk(root, root);

@@ -39,15 +39,21 @@ async function readJson<T>(response: Response): Promise<T> {
   return payload;
 }
 
-export async function createScan(authorized: boolean) {
+export async function createScan(
+  authorized: boolean,
+  mode: "auto" | "guided" = "auto",
+  lenses: string[] = [],
+) {
   return readJson<{ scanId: string; status: string }>(
     await fetch("/api/scans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         source: "demo",
-        repositoryId: "vulnerable-shop",
+        repositoryId: "existing-demo",
         authorized,
+        mode,
+        lenses,
       }),
     }),
   );
@@ -63,6 +69,8 @@ export async function getReport(scanId: string) {
   return readJson<{
     scanId: string;
     analysisMode: "demo" | "live";
+    scanMode: "auto" | "guided";
+    selectedLenses: string[];
     findings: SecurityFinding[];
     publicRoutes: number;
     authenticatedRoutes: number;

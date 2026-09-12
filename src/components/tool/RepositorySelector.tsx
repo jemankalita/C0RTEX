@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { isValidGitHubRepoUrl } from "@/lib/githubUrl";
-import type { DemoRepository, SourceKind } from "@/types/security";
+import type { DemoRepository, ScanMode, SourceKind, ThreatLens } from "@/types/security";
 
 type RepositorySelectorProps = {
   repository: DemoRepository;
@@ -14,6 +14,10 @@ type RepositorySelectorProps = {
   skipAnimation: boolean;
   onSkipAnimationChange: (value: boolean) => void;
   compact?: boolean;
+  scanMode?: ScanMode;
+  onScanModeChange?: (mode: ScanMode) => void;
+  lenses?: ThreatLens[];
+  onLensesChange?: (lenses: ThreatLens[]) => void;
 };
 
 export function RepositorySelector({
@@ -26,6 +30,10 @@ export function RepositorySelector({
   skipAnimation,
   onSkipAnimationChange,
   compact = false,
+  scanMode = "auto",
+  onScanModeChange,
+  lenses = [],
+  onLensesChange,
 }: RepositorySelectorProps) {
   const [githubUrl, setGithubUrl] = useState("");
   const [zipNote, setZipNote] = useState(false);
@@ -134,6 +142,65 @@ export function RepositorySelector({
           ) : null}
         </div>
       ) : null}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(
+          [
+            ["auto", "Auto mode"],
+            ["guided", "Guided mode"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onScanModeChange?.(value)}
+            className={`rounded-full border px-3 py-2 text-sm ${
+              scanMode === value ? "border-lime text-lime" : "border-line text-muted"
+            }`}
+            aria-pressed={scanMode === value}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {scanMode === "guided" ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {(
+            [
+              ["access-control", "Access control"],
+              ["injection", "Injection"],
+              ["browser-safety", "Browser safety"],
+              ["secrets", "Secrets"],
+              ["configuration", "Configuration"],
+            ] as const
+          ).map(([value, label]) => {
+            const active = lenses.includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  onLensesChange?.(
+                    active ? lenses.filter((lens) => lens !== value) : [...lenses, value],
+                  );
+                }}
+                className={`rounded-full border px-3 py-1.5 text-xs ${
+                  active ? "border-cyan text-cyan" : "border-line text-muted"
+                }`}
+                aria-pressed={active}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-muted">
+          Auto mode selects access-control, injection, browser-safety, secrets, and configuration
+          from the repository.
+        </p>
+      )}
 
       <label className="mt-4 flex items-center gap-2 text-sm text-muted">
         <input

@@ -37,12 +37,12 @@ describe("scoreFromFindings", () => {
 describe("countFindingsBySeverity", () => {
   it("counts open findings and ignores resolved ones", () => {
     const findings = createDemoFindings();
-    expect(countFindingsBySeverity(findings)).toEqual({ high: 2, medium: 2, low: 1 });
+    expect(countFindingsBySeverity(findings)).toEqual({ high: 5, medium: 6, low: 3 });
 
     const resolvedPrimary = findings.map((finding) =>
       finding.id === "missing-object-auth" ? { ...finding, status: "RESOLVED" as const } : finding,
     );
-    expect(countFindingsBySeverity(resolvedPrimary)).toEqual({ high: 1, medium: 2, low: 1 });
+    expect(countFindingsBySeverity(resolvedPrimary)).toEqual({ high: 4, medium: 6, low: 3 });
   });
 });
 
