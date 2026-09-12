@@ -22,6 +22,9 @@ export function Footer() {
             <a href="/#threat-reports">Reports</a>
           </li>
           <li>
+            <Link href="/benchmark">Accuracy</Link>
+          </li>
+          <li>
             <a href="/#safety">Safety</a>
           </li>
           <li>
