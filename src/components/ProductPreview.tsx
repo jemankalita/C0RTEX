@@ -36,13 +36,13 @@ export function ProductPreview() {
 
   return (
     <section id="demo" className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-cyan">The C0RTEX view</p>
-      <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
+      <p className="bracket">[ product ]</p>
+      <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
         See what the scanner cannot explain.
       </h2>
       <p className="mt-4 text-sm text-amber">Demo report — sample data, not a live scan.</p>
 
-      <div className="mt-8 overflow-hidden rounded-3xl border border-line bg-surface">
+      <div className="panel mt-8 overflow-hidden rounded-2xl">
         <header className="flex flex-col gap-4 border-b border-line px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-muted">C0RTEX security report</p>

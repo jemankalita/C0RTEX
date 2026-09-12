@@ -1,7 +1,6 @@
 "use client";
 
 import { AttackPathSection } from "@/components/AttackPathSection";
-import { CursorFollower } from "@/components/CursorFollower";
 import { DifferentiationSection } from "@/components/DifferentiationSection";
 import { FeatureGrid } from "@/components/FeatureGrid";
 import { FinalCTA } from "@/components/FinalCTA";
@@ -20,23 +19,24 @@ import { WorkflowSection } from "@/components/WorkflowSection";
 export function LandingPage() {
   return (
     <RobotProvider>
-      <CursorFollower />
       <Navbar />
       <main>
         <HeroSection />
-        <TrustStrip />
-        <ProblemSection />
-        <ProductPreview />
-        <WorkflowSection />
-        <AttackPathSection />
-        <SafetyScoreSection />
-        <ThreatReport />
-        <DifferentiationSection />
-        <FeatureGrid />
-        <SafetySection />
-        <FinalCTA />
+        <div className="relative z-10 bg-black">
+          <TrustStrip />
+          <ProblemSection />
+          <ProductPreview />
+          <WorkflowSection />
+          <AttackPathSection />
+          <SafetyScoreSection />
+          <ThreatReport />
+          <DifferentiationSection />
+          <FeatureGrid />
+          <SafetySection />
+          <FinalCTA />
+          <Footer />
+        </div>
       </main>
-      <Footer />
     </RobotProvider>
   );
 }

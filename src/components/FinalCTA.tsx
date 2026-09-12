@@ -2,35 +2,23 @@ import Link from "next/link";
 
 export function FinalCTA() {
   return (
-    <section className="relative overflow-hidden">
-      <video
-        className="absolute inset-0 h-full w-full object-cover opacity-25"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-      >
-        <source src="/background.mp4" type="video/mp4" />
-      </video>
-      <div className="absolute inset-0 bg-bg/80" />
-      <div className="relative mx-auto max-w-6xl px-5 py-24 text-center">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-cyan">Ready to see the path?</p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">
-          Find the weakness before it reaches production.
+    <section className="px-5 py-28">
+      <div className="mx-auto max-w-4xl text-center">
+        <p className="bracket">[ ready ]</p>
+        <h2 className="display mx-auto mt-4 max-w-3xl text-4xl leading-[1.02] sm:text-6xl">
+          C0RTEX is building the path from suspicion to a verified fix.
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted">
-          Scan an authorized codebase, understand the risk, and make your next release safer.
+        <p className="mx-auto mt-5 max-w-xl text-[17px] leading-7 text-muted">
+          Start with the included demo. See the attack path. Apply the patch. Recheck.
         </p>
-        <Link
-          href="/tool?demo=true"
-          data-cursor="open"
-          className="mt-8 inline-flex rounded-full bg-lime px-6 py-3 text-sm font-semibold text-bg"
-        >
-          Open C0RTEX →
-        </Link>
-        <p className="mt-4 text-xs text-muted">Start with the included vulnerable demo.</p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/tool?demo=true" className="btn-primary">
+            Start now
+          </Link>
+          <a href="#how-it-works" className="btn-ghost">
+            How it works
+          </a>
+        </div>
       </div>
     </section>
   );

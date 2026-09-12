@@ -38,15 +38,13 @@ export function WorkflowSection() {
   const primary = getPrimaryFinding();
 
   return (
-    <section id="how-it-works" className="border-t border-line bg-bg py-24">
+    <section id="how-it-works" className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-lime">How it works</p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
-          From suspicious pattern to verified fix.
+        <p className="bracket">[ agent ]</p>
+        <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
+          How C0RTEX reviews a codebase.
         </h2>
-        <p className="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-muted">
-          {WORKFLOW_FLOW.join(" → ")}
-        </p>
+        <p className="mt-4 text-sm text-muted">{WORKFLOW_FLOW.join(" → ")}</p>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="lg:sticky lg:top-28 lg:self-start">
@@ -59,7 +57,7 @@ export function WorkflowSection() {
                   <button
                     type="button"
                     className={`w-full rounded-full px-4 py-2 text-left text-sm ${
-                      step.id === active ? "bg-lime text-bg" : "border border-line text-muted"
+                      step.id === active ? "bg-lime text-bg" : "btn-ghost text-muted"
                     }`}
                     onClick={() => {
                       setActive(step.id);
@@ -87,7 +85,7 @@ export function WorkflowSection() {
                   stepRefs.current[step.id] = node;
                 }}
                 data-stage={step.id}
-                className="rounded-3xl border border-line bg-surface p-6"
+                className="panel rounded-2xl p-6"
               >
                 <p className="text-[11px] uppercase tracking-[0.2em] text-muted">{step.number} {step.title}</p>
                 <p className="mt-3 text-sm text-muted">{step.caption}</p>

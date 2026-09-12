@@ -9,11 +9,11 @@ const PRINCIPLES = [
   },
   {
     title: "Controlled validation",
-    body: "Keep validation inside a sandbox or local demo environment.",
+    body: "Keep validation inside a sandbox or the local demo.",
   },
   {
     title: "Human approval",
-    body: "Generated fixes remain suggestions until a developer reviews them.",
+    body: "Generated fixes stay suggestions until someone reviews them.",
   },
   {
     title: "Transparent limitations",
@@ -23,24 +23,24 @@ const PRINCIPLES = [
 
 export function SafetySection() {
   return (
-    <section id="safety" className="border-y border-line bg-surface/60">
+    <section id="safety" className="border-y border-line">
       <div className="mx-auto max-w-6xl px-5 py-24">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-lime">Security-first by design</p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
-          Attacker-style reasoning. Developer-safe execution.
+        <p className="bracket">[ safety ]</p>
+        <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
+          Security-first design.
         </h2>
-        <p className="mt-5 max-w-2xl text-base leading-7 text-muted">
-          C0RTEX is designed for authorized defensive analysis. The MVP analyzes
-          uploaded code and controlled demo applications. It does not probe
-          arbitrary websites or silently modify repositories.
+        <p className="mt-5 max-w-2xl text-[17px] leading-7 text-muted">
+          Built for authorized defensive analysis. The demo stays inside the
+          included repository. It does not probe arbitrary websites.
         </p>
-        <ol className="mt-10 grid gap-4 md:grid-cols-2">
+        <ol className="mt-12 grid gap-4 md:grid-cols-2">
           {PRINCIPLES.map((item, index) => (
-            <li key={item.title} className="rounded-3xl border border-line bg-bg p-6">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-cyan">
-                0{index + 1} {item.title}
+            <li key={item.title} className="panel rounded-2xl p-6">
+              <p className="bracket">
+                {String(index + 1).padStart(2, "0")}
               </p>
-              <p className="mt-3 text-sm leading-6 text-muted">{item.body}</p>
+              <p className="mt-3 text-base font-medium">{item.title}</p>
+              <p className="mt-2 text-sm leading-6 text-muted">{item.body}</p>
             </li>
           ))}
         </ol>

@@ -9,8 +9,8 @@ export function SafetyScoreSection() {
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-amber">Measure what matters</p>
-      <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
+      <p className="bracket">[ score ]</p>
+      <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         A score that explains itself.
       </h2>
       <p className="mt-5 max-w-2xl text-base leading-7 text-muted">

@@ -1,21 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const ibm = IBM_Plex_Mono({
+  variable: "--font-ibm",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "C0RTEX — Think like an attacker. Fix like an engineer.",
+  title: "C0RTEX — The AI security analyst.",
   description:
-    "C0RTEX reads your authorized codebase like an attacker, explains the real risk, and helps you fix it before someone else does.",
+    "C0RTEX reads an authorized codebase like an attacker, traces the real path, and helps you fix it before it ships.",
 };
 
 export default function RootLayout({
@@ -24,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body className={`${inter.variable} ${interTight.variable} ${ibm.variable} ${inter.className} antialiased`}>
         {children}
       </body>
     </html>

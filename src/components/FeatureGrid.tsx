@@ -82,13 +82,13 @@ function FeatureVisual({ kind }: { kind: (typeof FEATURES)[number]["visual"] }) 
 export function FeatureGrid() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-cyan">Built for developers</p>
-      <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
+      <p className="bracket">[ stack ]</p>
+      <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         Security reasoning without the noise.
       </h2>
       <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {FEATURES.map((feature) => (
-          <article key={feature.title} className="rounded-3xl border border-line bg-surface p-6">
+          <article key={feature.title} className="panel rounded-2xl p-6">
             <FeatureVisual kind={feature.visual} />
             <h3 className="mt-5 text-lg font-semibold">{feature.title}</h3>
             <p className="mt-2 text-sm leading-6 text-muted">{feature.body}</p>

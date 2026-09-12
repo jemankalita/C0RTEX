@@ -21,19 +21,19 @@ const ROWS = [
 export function DifferentiationSection() {
   return (
     <section className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-amber">Beyond pattern matching</p>
-      <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
+      <p className="bracket">[ compare ]</p>
+      <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         Security context developers can use.
       </h2>
-      <div className="mt-10 overflow-hidden rounded-3xl border border-line">
+      <div className="panel mt-10 overflow-hidden rounded-2xl">
         {ROWS.map((row) => (
           <div key={row.traditional} className="grid border-b border-line last:border-b-0 md:grid-cols-2">
-            <div className="bg-elevated p-5">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Traditional scanner</p>
+            <div className="p-5">
+              <p className="bracket">[ scanner ]</p>
               <p className="mt-3 text-sm leading-6 text-amber">{row.traditional}</p>
             </div>
-            <div className="bg-surface p-5">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-lime">C0RTEX</p>
+            <div className="border-t border-line p-5 md:border-l md:border-t-0">
+              <p className="bracket">[ c0rtex ]</p>
               <p className="mt-3 text-sm leading-6 text-ink">{row.cortex}</p>
             </div>
           </div>

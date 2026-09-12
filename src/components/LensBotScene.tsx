@@ -111,9 +111,9 @@ export function LensBotScene({ className = "" }: LensBotSceneProps) {
   }, [lookTarget, reduceMotion]);
 
   return (
-    <div ref={containerRef} className={`relative overflow-hidden ${className}`} aria-hidden="true">
+    <div ref={containerRef} className={`relative overflow-visible bg-transparent ${className}`} aria-hidden="true">
       <div
-        className="h-full w-full will-change-transform"
+        className="robot-blend h-full w-full"
         style={{
           transform: reduceMotion
             ? undefined
@@ -124,13 +124,31 @@ export function LensBotScene({ className = "" }: LensBotSceneProps) {
           <RobotFallback label="C0RTEX analyst standby" />
         ) : (
           <SplineBoundary onError={() => setFailed(true)}>
-            <div className={`h-full w-full [&_canvas]:h-full [&_canvas]:w-full ${visible ? "" : "invisible"}`}>
-              <Spline scene={SPLINE_SCENE} renderOnDemand={!visible || reduceMotion} />
+            <div
+              className={`robot-blend h-full w-full [&_canvas]:h-full [&_canvas]:w-full ${
+                visible ? "" : "invisible"
+              }`}
+            >
+              <Spline
+                scene={SPLINE_SCENE}
+                renderOnDemand={!visible || reduceMotion}
+                onLoad={(spline) => {
+                  const app = spline as {
+                    setBackgroundColor?: (color: string) => void;
+                    findObjectByName?: (name: string) => { visible: boolean } | undefined;
+                  };
+                  app.setBackgroundColor?.("transparent");
+                  ["Background", "Plane", "Floor", "Ground", "Backdrop", "Rectangle"].forEach((name) => {
+                    const object = app.findObjectByName?.(name);
+                    if (object) object.visible = false;
+                  });
+                }}
+              />
             </div>
           </SplineBoundary>
         )}
       </div>
-      <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-line bg-bg/70 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-lime">
+      <div className="pointer-events-none absolute left-2 top-2 rounded-full border border-line bg-bg/40 px-3 py-1 font-mono text-[11px] text-lime">
         {status}
       </div>
     </div>

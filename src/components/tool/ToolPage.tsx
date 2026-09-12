@@ -38,18 +38,6 @@ export function ToolPage() {
 
   return (
     <div className="relative min-h-screen pb-16">
-      <video
-        className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover opacity-25"
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-      >
-        <source src="/background.mp4" type="video/mp4" />
-      </video>
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-bg/50 via-bg/80 to-bg" />
-
       <ToolNavbar onNewScan={scan.resetScan} />
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 md:px-6">
         {scan.toast ? (

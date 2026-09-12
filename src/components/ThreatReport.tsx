@@ -18,12 +18,12 @@ export function ThreatReport() {
 
   return (
     <section id="threat-reports" className="mx-auto max-w-6xl px-5 py-24">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-threat">Actionable security reports</p>
-      <h2 className="mt-3 max-w-xl text-3xl font-semibold tracking-tight sm:text-5xl">
+      <p className="bracket">[ reports ]</p>
+      <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         A report developers can act on.
       </h2>
 
-      <article className="mt-10 rounded-3xl border border-line bg-surface p-6 sm:p-8">
+      <article className="panel mt-10 rounded-2xl p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-threat">
           {state.resolved ? "Resolved · broken access control" : "High · broken access control"}
         </p>
