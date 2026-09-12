@@ -51,7 +51,7 @@ export function Footer() {
           {/* Careers-style CTA block, Raven "working at raven" style */}
           <Reveal delay={0.1}>
             <div className="max-w-md">
-              <p className="label text-black">START NOW</p>
+              <p className="label !text-black !font-bold">START NOW</p>
               <p className="mt-3 text-xl font-medium leading-8 !text-black">
                 Your code has attack paths?
               </p>
