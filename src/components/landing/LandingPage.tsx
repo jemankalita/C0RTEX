@@ -1,5 +1,6 @@
 "use client";
 
+import { AccuracySection } from "@/components/AccuracySection";
 import { AttackPathSection } from "@/components/AttackPathSection";
 import { DifferentiationSection } from "@/components/DifferentiationSection";
 import { FeatureGrid } from "@/components/FeatureGrid";
@@ -37,6 +38,7 @@ export function LandingPage() {
           <WorkflowSection />
           <AttackPathSection />
           <SafetyScoreSection />
+          <AccuracySection />
           <ThreatReport />
           <DifferentiationSection />
           <ScrollingBand />

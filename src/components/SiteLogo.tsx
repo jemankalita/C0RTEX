@@ -2,7 +2,7 @@ type SiteLogoProps = {
   className?: string;
 };
 
-export function SiteLogo({ className = "h-16 w-auto" }: SiteLogoProps) {
+export function SiteLogo({ className = "h-14 w-auto sm:h-16 md:h-20" }: SiteLogoProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

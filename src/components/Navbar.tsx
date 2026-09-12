@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { NavPill, SITE_LOGO_CLASS, navItemClass } from "@/components/NavChrome";
 import { SiteLogo } from "@/components/SiteLogo";
 
 const LINKS = [
   { href: "/#how-it-works", label: "How it works", id: "how-it-works" },
   { href: "/#threat-reports", label: "Reports", id: "threat-reports" },
+  { href: "/benchmark", label: "Accuracy", id: "accuracy" },
   { href: "/#safety", label: "Safety", id: "safety" },
   { href: "/#demo", label: "Demo", id: "demo" },
 ] as const;
@@ -32,22 +34,24 @@ export function Navbar() {
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3" aria-label="Primary">
         <Link href="/" className="flex min-w-0 items-center" aria-label="C0RTEX home">
-          <SiteLogo className="h-14 w-auto sm:h-16 md:h-20" />
+          <SiteLogo className={SITE_LOGO_CLASS} />
         </Link>
 
-        <ul className="hidden items-center gap-8 md:flex">
-          {LINKS.map((link) => (
-            <li key={link.href}>
-              <a href={link.href} className="nav-link hover:text-lime">
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <NavPill className="hidden md:inline-flex">
+          <ul className="flex items-center">
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <a href={link.href} className={navItemClass()}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </NavPill>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <Link href="/tool?demo=true" className="btn-primary hidden whitespace-nowrap md:inline-flex">
-            Start now
+            Start now →
           </Link>
           <button
             type="button"
@@ -63,17 +67,17 @@ export function Navbar() {
 
       {open ? (
         <div id="mobile-nav" className="border-t border-line bg-bg/90 px-5 py-4 backdrop-blur-xl md:hidden">
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-col gap-2">
             {LINKS.map((link) => (
               <li key={link.href}>
-                <a href={link.href} className="nav-link" onClick={() => setOpen(false)}>
+                <a href={link.href} className={navItemClass()} onClick={() => setOpen(false)}>
                   {link.label}
                 </a>
               </li>
             ))}
             <li>
-              <Link href="/tool?demo=true" className="nav-link text-lime" onClick={() => setOpen(false)}>
-                Start now
+              <Link href="/tool?demo=true" className={`${navItemClass()} text-lime`} onClick={() => setOpen(false)}>
+                Start now →
               </Link>
             </li>
           </ul>
