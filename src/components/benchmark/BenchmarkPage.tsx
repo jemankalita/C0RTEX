@@ -6,6 +6,8 @@ import { Footer } from "@/components/Footer";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { Navbar } from "@/components/Navbar";
 import { Reveal } from "@/components/motion/Reveal";
+import { BenchProofPanel } from "@/components/benchmark/BenchProofPanel";
+import type { BenchProof } from "@/lib/benchProof";
 import type { BenchExample, BenchReport } from "@/lib/evaluateKaggleBench";
 import { formatPercent } from "@/lib/evaluateKaggleBench";
 
@@ -79,7 +81,7 @@ function ExampleRow({ example }: { example: BenchExample }) {
   );
 }
 
-export function BenchmarkPage({ report }: { report: BenchReport }) {
+export function BenchmarkPage({ report, proof }: { report: BenchReport; proof: BenchProof }) {
   return (
     <>
       <GrainOverlay />
@@ -133,6 +135,8 @@ export function BenchmarkPage({ report }: { report: BenchReport }) {
             </a>
           </article>
         </section>
+
+        <BenchProofPanel initialProof={proof} />
 
         <section className="mx-auto max-w-6xl px-5 pb-16">
           <p className="bracket">[ families ]</p>

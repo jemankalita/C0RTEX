@@ -35,9 +35,15 @@ export function AccuracySection() {
           <p className="mt-3 text-4xl text-lime">{formatPercent(REPORT.recall)}</p>
         </article>
       </div>
-      <Link href="/benchmark" className="btn-primary mt-8">
-        View the bench
-      </Link>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link href="/benchmark" className="btn-primary">
+          View the bench
+        </Link>
+        <Link href="/benchmark#proof" className="btn-ghost">
+          Live proof
+        </Link>
+      </div>
+
     </section>
   );
 }
