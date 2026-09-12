@@ -6,5 +6,5 @@ export const ERROR_MESSAGES: Record<ScanErrorKind, string> = {
   scan_failure: "The scan could not complete. Retry the scan or use the built-in demo.",
   missing_context:
     "The pattern was detected, but the available context is insufficient to determine practical exploitability.",
-  patch_failure: "The suggested patch could not be applied cleanly to the temporary demo copy.",
+  patch_failure: "The suggested patch could not be applied cleanly to the scan working copy.",
 };

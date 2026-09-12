@@ -18,6 +18,7 @@ export type ScanRecord = {
   findings: SecurityFinding[];
   report: ScanReport | null;
   error: string | null;
+  patchedPaths: string[];
 };
 
 const globalStore = globalThis as typeof globalThis & {
@@ -51,6 +52,7 @@ export function createScanRecord(
     findings: [],
     report: null,
     error: null,
+    patchedPaths: [],
   };
   scans.set(id, record);
   return record;

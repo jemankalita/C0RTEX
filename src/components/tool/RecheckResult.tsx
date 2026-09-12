@@ -24,8 +24,12 @@ export function RecheckResult({
 
   return (
     <SlideIn from="bottom" present animateKey={`recheck-${finding.id}-${finding.status}`}>
-      <section className="panel hud-panel rounded-2xl p-5">
-        <p className="text-sm text-lime">Patch applied to temporary demo copy.</p>
+      <section className="panel p-5">
+        <p className="text-sm text-confirmed">Patch applied to the scan working copy.</p>
+        <p className="mt-2 text-sm text-muted">
+          Recheck verifies this path in the working copy. Download the patched file and commit it to
+          actually fix the repository.
+        </p>
         {finding.status !== "RESOLVED" ? (
           <button
             type="button"

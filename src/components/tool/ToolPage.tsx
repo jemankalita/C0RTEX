@@ -67,7 +67,7 @@ export function ToolPage() {
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-2 text-sm text-lime"
+              className="rounded-[4px] border border-signal px-4 py-2 text-sm text-signal"
               aria-live="polite"
             >
               {scan.toast}
@@ -78,7 +78,7 @@ export function ToolPage() {
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="rounded-xl border border-threat/40 bg-threat/10 px-4 py-2 text-sm"
+              className="rounded-[4px] border border-threat px-4 py-2 text-sm"
               role="alert"
             >
               {scan.errorMessage}
@@ -135,7 +135,7 @@ export function ToolPage() {
                 role="tab"
                 aria-selected={tab === item}
                 onClick={() => setTab(item)}
-                className={`rounded-full px-3 py-2 text-sm ${tab === item ? "bg-cyan text-bg" : "border border-line"}`}
+                className={`rounded-[6px] px-3 py-2 text-sm font-semibold ${tab === item ? "bg-signal text-void" : "border border-line"}`}
               >
                 {item}
               </button>
@@ -181,13 +181,21 @@ export function ToolPage() {
                   <CodeContext finding={scan.selectedFinding} />
                   <PatchViewer
                     finding={scan.selectedFinding}
+                    source={scan.source}
                     visible={scan.patchVisible}
                     generating={scan.generatingPatch}
                     confirming={scan.confirmingPatch}
+                    canDownload={
+                      Boolean(scan.patchedFile) ||
+                      scan.selectedFinding.status === "PATCH_APPLIED" ||
+                      scan.selectedFinding.status === "RESOLVED"
+                    }
                     onGenerate={scan.generatePatch}
                     onConfirmToggle={scan.setConfirmingPatch}
                     onApply={scan.applyPatch}
                     onReject={scan.rejectPatch}
+                    onDownload={scan.downloadPatchedFile}
+                    onDownloadAll={scan.downloadAllPatchedFiles}
                   />
                   <RecheckResult
                     finding={scan.selectedFinding}
@@ -221,12 +229,12 @@ export function ToolPage() {
           <section className="space-y-4">
             {scan.scanning ? (
               <SlideIn from="bottom">
-                <div className="panel relative overflow-hidden rounded-2xl p-8">
+                <div className="panel relative overflow-hidden p-8">
                   <ScanningBeam active />
-                  <p className="label text-cyan">
+                  <p className="text-sm font-semibold text-signal">
                     <span className="scan-stage-current">{robotStatus}</span>
                   </p>
-                  <h2 className="pixel-heading mt-3 text-2xl text-white/90 sm:text-3xl">
+                  <h2 className="display mt-3">
                     Here is the attack path taking shape.
                   </h2>
                   <p className="mt-2 text-sm text-muted">{scan.analysisMessage}</p>
@@ -264,13 +272,21 @@ export function ToolPage() {
                     <div className="space-y-4">
                       <PatchViewer
                         finding={scan.selectedFinding}
+                        source={scan.source}
                         visible={scan.patchVisible}
                         generating={scan.generatingPatch}
                         confirming={scan.confirmingPatch}
+                        canDownload={
+                          Boolean(scan.patchedFile) ||
+                          scan.selectedFinding.status === "PATCH_APPLIED" ||
+                          scan.selectedFinding.status === "RESOLVED"
+                        }
                         onGenerate={scan.generatePatch}
                         onConfirmToggle={scan.setConfirmingPatch}
                         onApply={scan.applyPatch}
                         onReject={scan.rejectPatch}
+                        onDownload={scan.downloadPatchedFile}
+                        onDownloadAll={scan.downloadAllPatchedFiles}
                       />
                       <RecheckResult
                         finding={scan.selectedFinding}
@@ -285,7 +301,7 @@ export function ToolPage() {
               </StaggerGroup>
             ) : scan.scanning ? null : (
               <Reveal>
-                <div className="panel rounded-2xl p-8 text-muted">
+                <div className="panel p-8 text-muted">
                   Confirm authorization, then start a threat scan to map the attack surface.
                 </div>
               </Reveal>
@@ -303,7 +319,7 @@ export function ToolPage() {
           </aside>
         </div>
 
-        <footer id="safety-note" className="rounded-2xl border border-line px-4 py-4 text-sm text-muted">
+        <footer id="safety-note" className="rounded-[4px] border border-line px-4 py-4 text-sm text-muted">
           C0RTEX is for authorized defensive analysis only. Do not scan systems you do not own or
           have permission to test. This score and these findings are a prioritization signal, not a
           security guarantee.

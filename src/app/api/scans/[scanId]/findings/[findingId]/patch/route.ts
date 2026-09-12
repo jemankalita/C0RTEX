@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
-import { emitScanEvent, getScanRecord } from "@/server/store";
 import { withFindingStatus } from "@/lib/findingState";
+import { suggestPatch } from "@/lib/suggestPatch";
+import { emitScanEvent, getScanRecord } from "@/server/store";
 
 export async function POST(_request: Request, context: { params: Promise<{ scanId: string; findingId: string }> }) {
   const { scanId, findingId } = await context.params;
   const record = getScanRecord(scanId);
   const finding = record?.findings.find((item) => item.id === findingId);
-  if (!record || !finding?.patch) {
+  if (!record || !finding) {
+    return NextResponse.json(
+      { error: "The suggested patch could not be generated for this finding.", retry: true, demo: true },
+      { status: 400 },
+    );
+  }
+
+  const suggestion = suggestPatch(finding);
+  if (!suggestion.patch.trim()) {
     return NextResponse.json(
       { error: "The suggested patch could not be generated for this finding.", retry: true, demo: true },
       { status: 400 },
@@ -20,7 +29,16 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
     status: "running",
     agent: "patch-planning",
   });
-  record.findings = withFindingStatus(record.findings, findingId, "UNDER_REVIEW");
+
+  record.findings = withFindingStatus(record.findings, findingId, "UNDER_REVIEW").map((item) =>
+    item.id === findingId
+      ? { ...item, patch: suggestion.patch, patchExplanation: suggestion.patchExplanation }
+      : item,
+  );
+  if (record.report) {
+    record.report = { ...record.report, findings: record.findings };
+  }
+
   emitScanEvent(record, {
     stage: "patching",
     label: "Suggested patch ready.",
@@ -34,7 +52,10 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
     finding: next,
     patch: next?.patch,
     patchExplanation: next?.patchExplanation,
-    assumptions: ["The temporary demo copy is the only target."],
+    assumptions: [
+      "C0RTEX applies confirmed patches only to this scan's working copy, not to GitHub.",
+      "Download the patched file and commit it in the real repository after review.",
+    ],
     recommendedTests: next?.relatedTest ? [next.relatedTest] : ["Add a regression test for the affected path."],
     limitations: next?.limitations ?? [],
   });

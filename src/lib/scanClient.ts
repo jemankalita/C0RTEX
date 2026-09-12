@@ -100,13 +100,32 @@ export async function requestPatch(scanId: string, findingId: string) {
 }
 
 export async function applyPatch(scanId: string, findingId: string) {
-  return readJson<{ findings: SecurityFinding[] }>(
+  return readJson<{
+    findings: SecurityFinding[];
+    patchedFile?: { path: string; content: string };
+  }>(
     await fetch(`/api/scans/${scanId}/findings/${findingId}/apply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ confirmed: true }),
     }),
   );
+}
+
+export async function getPatchedFiles(scanId: string) {
+  return readJson<{ repositoryName: string; files: Array<{ path: string; content: string }> }>(
+    await fetch(`/api/scans/${scanId}/patched-files`),
+  );
+}
+
+export function downloadTextFile(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function recheckFinding(scanId: string, findingId: string) {
