@@ -13,6 +13,22 @@ This repository is the landing page plus a live demo of the analyzer. The demo r
 | `/` | Product landing page |
 | `/tool?demo=true` | Analyzer demo (authorization pre-checked) |
 
+## Analyzer backend
+
+The tool page calls Next.js route handlers. API keys stay on the server.
+
+Copy `.env.example` to `.env.local`:
+
+```bash
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=
+MAX_AGENT_CONCURRENCY=5
+ENABLE_LIVE_ANALYSIS=true
+```
+
+- Without `GEMINI_API_KEY`, scans still run in **Demo analysis mode** using the `demo-repo` files and deterministic agents.
+- With a key, the same UI can request structured Gemini analysis. The key must never be prefixed with `NEXT_PUBLIC_`.
+
 ## Local setup
 
 Requires Node.js 20+.

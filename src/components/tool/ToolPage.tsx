@@ -40,6 +40,9 @@ export function ToolPage() {
     <div className="relative min-h-screen pb-16">
       <ToolNavbar onNewScan={scan.resetScan} />
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 md:px-6">
+        {scan.analysisMode === "demo" && scan.status !== "idle" ? (
+          <p className="text-xs text-muted">Demo analysis mode.</p>
+        ) : null}
         {scan.toast ? (
           <p className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-2 text-sm text-lime" aria-live="polite">
             {scan.toast}
