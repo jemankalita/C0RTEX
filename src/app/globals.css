@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #06080d;
+  --surface: #0d111a;
+  --elevated: #131a25;
+  --text: #f4f7fb;
+  --muted: #8c98aa;
+  --lime: #b8ff4d;
+  --cyan: #54d7ff;
+  --amber: #ffc857;
+  --red: #ff5c68;
+  --border: rgba(160, 180, 210, 0.16);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-lime: var(--lime);
+  --color-cyan: var(--cyan);
+  --color-amber: var(--amber);
+  --color-threat: var(--red);
+  --color-line: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.cursor-desktop {
+  cursor: none;
+}
+
+.scan-grid {
+  background-image:
+    linear-gradient(rgba(160, 180, 210, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 180, 210, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.scan-lines::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.018) 3px,
+    rgba(255, 255, 255, 0.018) 4px
+  );
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  outline-offset: 3px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--cyan);
+}
+
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(84, 215, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 215, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.scan-grid {
+  background-image:
+    linear-gradient(rgba(84, 215, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 215, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.scan-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(6, 8, 13, 0.16) 3px
+  );
+}
+
+.scanlines::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(6, 8, 13, 0.18) 3px
+  );
+  opacity: 0.35;
+}
+
+.panel {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-custom-cursor,
+  .custom-cursor {
+    display: none !important;
+  }
+}
