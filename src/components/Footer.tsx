@@ -95,12 +95,8 @@ export function Footer() {
           </Reveal>
         </div>
 
-        {/* Bottom row: disclaimer + year */}
-        <div className="mt-20 flex flex-col gap-2 border-t border-line pt-6 text-xs leading-6 text-muted md:flex-row md:items-center md:justify-between">
-          <p>
-            C0RTEX is for authorized defensive analysis. It does not guarantee that an
-            application is secure.
-          </p>
+        {/* Bottom row: year */}
+        <div className="mt-20 flex flex-col gap-2 border-t border-line pt-6 text-xs leading-6 text-muted md:flex-row md:items-center md:justify-end">
           <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-muted/70">
             © {new Date().getFullYear()} c0rtex
           </p>
