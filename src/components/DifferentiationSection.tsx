@@ -1,3 +1,7 @@
+"use client";
+
+import { StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+
 const ROWS = [
   {
     traditional: "Possible SQL injection at line 42.",
@@ -25,9 +29,9 @@ export function DifferentiationSection() {
       <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         Security context developers can use.
       </h2>
-      <div className="panel mt-10 overflow-hidden rounded-2xl">
+      <StaggerGroup className="panel mt-10 overflow-hidden rounded-2xl" stagger={0.12} childAs="div">
         {ROWS.map((row) => (
-          <div key={row.traditional} className="grid border-b border-line last:border-b-0 md:grid-cols-2">
+          <StaggerItem key={row.traditional} className="grid border-b border-line last:border-b-0 md:grid-cols-2">
             <div className="p-5">
               <p className="bracket">[ scanner ]</p>
               <p className="mt-3 text-sm leading-6 text-amber">{row.traditional}</p>
@@ -36,9 +40,9 @@ export function DifferentiationSection() {
               <p className="bracket">[ c0rtex ]</p>
               <p className="mt-3 text-sm leading-6 text-ink">{row.cortex}</p>
             </div>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

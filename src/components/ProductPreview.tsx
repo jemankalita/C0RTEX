@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { AttackPathGraph } from "@/components/AttackPathGraph";
+import { Reveal } from "@/components/motion/Reveal";
 import { SafetyScore } from "@/components/SafetyScore";
 import {
   countBySeverity,
@@ -33,16 +35,29 @@ export function ProductPreview() {
   const findings = visibleFindings(state.resolved);
   const counts = useMemo(() => countBySeverity(findings), [findings]);
   const primary = getPrimaryFinding();
+  const reduced = useReducedMotion();
 
   return (
     <section id="demo" className="mx-auto max-w-6xl px-5 py-24">
-      <p className="bracket">[ product ]</p>
-      <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
-        See what the scanner cannot explain.
-      </h2>
-      <p className="mt-4 text-sm text-amber">Demo report — sample data, not a live scan.</p>
+      <Reveal>
+        <p className="bracket">[ product ]</p>
+      </Reveal>
+      <Reveal delay={0.08}>
+        <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
+          See what the scanner cannot explain.
+        </h2>
+      </Reveal>
+      <Reveal delay={0.16}>
+        <p className="mt-4 text-sm text-amber">Demo report — sample data, not a live scan.</p>
+      </Reveal>
 
-      <div className="panel mt-8 overflow-hidden rounded-2xl">
+      <motion.div
+        className="panel hud-panel mt-8 overflow-hidden rounded-2xl"
+        initial={reduced ? false : { opacity: 0, y: 64, scale: 0.97 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, margin: "0px 0px -10% 0px" }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      >
         <header className="flex flex-col gap-4 border-b border-line px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-[0.22em] text-muted">C0RTEX security report</p>
@@ -152,7 +167,7 @@ export function ProductPreview() {
             </pre>
           ) : null}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

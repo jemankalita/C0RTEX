@@ -1,3 +1,7 @@
+"use client";
+
+import { StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+
 const FEATURES = [
   {
     title: "Context-aware analysis",
@@ -86,15 +90,15 @@ export function FeatureGrid() {
       <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
         Security reasoning without the noise.
       </h2>
-      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <StaggerGroup className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3" childAs="article">
         {FEATURES.map((feature) => (
-          <article key={feature.title} className="panel rounded-2xl p-6">
+          <StaggerItem key={feature.title} as="article" className="panel hud-panel rounded-2xl p-6">
             <FeatureVisual kind={feature.visual} />
             <h3 className="mt-5 text-lg font-semibold">{feature.title}</h3>
             <p className="mt-2 text-sm leading-6 text-muted">{feature.body}</p>
-          </article>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 }

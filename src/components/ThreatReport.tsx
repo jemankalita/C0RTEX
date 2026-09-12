@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AttackPathGraph } from "@/components/AttackPathGraph";
+import { Reveal } from "@/components/motion/Reveal";
 import { getPrimaryFinding } from "@/data/demoFindings";
 import {
   generatePatch,
@@ -18,12 +19,17 @@ export function ThreatReport() {
 
   return (
     <section id="threat-reports" className="mx-auto max-w-6xl px-5 py-24">
-      <p className="bracket">[ reports ]</p>
-      <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
-        A report developers can act on.
-      </h2>
+      <Reveal>
+        <p className="bracket">[ reports ]</p>
+      </Reveal>
+      <Reveal delay={0.08}>
+        <h2 className="display mt-4 max-w-xl text-4xl leading-[1.02] sm:text-6xl">
+          A report developers can act on.
+        </h2>
+      </Reveal>
 
-      <article className="panel mt-10 rounded-2xl p-6 sm:p-8">
+      <Reveal delay={0.16} y={44} className="mt-10">
+        <article className="panel rounded-2xl p-6 sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-threat">
           {state.resolved ? "Resolved · broken access control" : "High · broken access control"}
         </p>
@@ -88,7 +94,8 @@ export function ThreatReport() {
             <AttackPathGraph resolved={state.resolved} highlighted />
           </div>
         ) : null}
-      </article>
+        </article>
+      </Reveal>
     </section>
   );
 }

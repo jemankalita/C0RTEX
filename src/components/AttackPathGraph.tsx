@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useReducedMotion } from "framer-motion";
 
 export type AttackNode = {
   id: string;
@@ -62,6 +63,7 @@ type AttackPathGraphProps = {
 
 export function AttackPathGraph({ resolved = false, highlighted = false }: AttackPathGraphProps) {
   const [activeId, setActiveId] = useState<string>(NODES[0].id);
+  const reduced = useReducedMotion();
   const active = NODES.find((node) => node.id === activeId) ?? NODES[0];
 
   return (
@@ -76,7 +78,9 @@ export function AttackPathGraph({ resolved = false, highlighted = false }: Attac
                 onMouseEnter={() => setActiveId(node.id)}
                 onFocus={() => setActiveId(node.id)}
                 onClick={() => setActiveId(node.id)}
-                className={`w-full rounded-2xl border bg-surface px-3 py-4 text-left text-xs uppercase tracking-[0.16em] ${TONE_CLASS[tone]}`}
+                className={`w-full rounded-2xl border bg-surface px-3 py-4 text-left text-xs uppercase tracking-[0.16em] ${TONE_CLASS[tone]} ${
+                  activeId === node.id && !reduced ? "pulse-ring" : ""
+                }`}
               >
                 {node.label}
               </button>

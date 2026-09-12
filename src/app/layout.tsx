@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Inter, Inter_Tight } from "next/font/google";
+import { IBM_Plex_Mono, Inter, Inter_Tight, Silkscreen } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,6 +21,13 @@ const ibm = IBM_Plex_Mono({
   display: "swap",
 });
 
+const silkscreen = Silkscreen({
+  variable: "--font-pixel",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "C0RTEX — The AI security analyst.",
   description:
@@ -34,7 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body className={`${inter.variable} ${interTight.variable} ${ibm.variable} ${inter.className} antialiased`}>
+      <body
+        className={`${inter.variable} ${interTight.variable} ${ibm.variable} ${silkscreen.variable} ${inter.className} antialiased`}
+      >
         {children}
       </body>
     </html>
