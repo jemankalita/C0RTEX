@@ -11,7 +11,7 @@ import { useRobot } from "@/components/RobotContext";
 import { SiteBackground } from "@/components/SiteBackground";
 
 export function HeroSection() {
-  const { setLookTarget, setStatus } = useRobot();
+  const { setLookTarget, setStatus, status } = useRobot();
 
   return (
     <section className="relative isolate min-h-screen overflow-hidden pt-28">
@@ -75,9 +75,9 @@ export function HeroSection() {
         </Reveal>
       </HeroScrollFade>
 
-      {/* Finding ticker: left edge, just below the navbar — over background only */}
+      {/* Finding ticker + status pill: clustered under the REPORTS nav item */}
       <div
-        className="absolute left-5 top-32 z-20 hidden lg:block"
+        className="absolute left-1/2 top-32 z-20 hidden -translate-x-[130px] lg:block"
         onMouseEnter={() => {
           setLookTarget("threat");
           setStatus("PATH DETECTED");
@@ -87,7 +87,7 @@ export function HeroSection() {
           setStatus("IDLE");
         }}
       >
-        <HeroFindingTicker />
+        <HeroFindingTicker status={status} />
       </div>
     </section>
   );

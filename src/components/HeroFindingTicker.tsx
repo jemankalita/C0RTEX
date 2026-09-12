@@ -44,10 +44,11 @@ function useDecoding(target: string, active: boolean) {
 }
 
 /** Hero "[ FINDING ]" card that keeps cycling through real findings, decoding each. */
-export function HeroFindingTicker() {
+export function HeroFindingTicker({ status = "IDLE" }: { status?: string }) {
   const reduced = useReducedMotion();
   const [findings] = useState(() => createDemoFindings());
   const [index, setIndex] = useState(0);
+  const findingStatus = status;
 
   useEffect(() => {
     if (reduced) return;
@@ -70,6 +71,12 @@ export function HeroFindingTicker() {
       aria-live="off"
     >
       <p className="bracket">
+        <span
+          className="mb-2 inline-block rounded-full border border-line bg-bg/40 px-3 py-1 font-mono text-[11px] text-lime"
+        >
+          {findingStatus}
+        </span>
+        <br />
         [ finding ]
         <motion.span
           className="ml-2 inline-block h-1.5 w-1.5 rounded-full bg-lime align-middle"
