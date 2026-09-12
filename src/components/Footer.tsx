@@ -70,10 +70,6 @@ export function Footer() {
                   <span aria-hidden="true">→</span>
                 </Link>
               </motion.div>
-              <p className="mt-6 text-sm text-muted">
-                &ldquo;Scanning is not stressful...&rdquo;
-              </p>
-              <p className="text-xs text-muted/70">— C0RTEX analyst, 24 years old</p>
             </div>
           </Reveal>
 
