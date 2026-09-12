@@ -10,6 +10,7 @@ import {
   applyPatch as applyRemotePatch,
   createScan,
   downloadTextFile,
+  exportFindingFix,
   getPatchedFiles,
   getReport,
   getScan,
@@ -19,6 +20,7 @@ import {
   toUiStatus,
   type BackendProgress,
 } from "@/lib/scanClient";
+import { suggestPatch } from "@/lib/suggestPatch";
 import { SCAN_STAGES, isScanning } from "@/lib/scanStages";
 import {
   categoryScoresFromFindings,
@@ -27,7 +29,6 @@ import {
   scanConfidenceFromFindings,
   scoreFromFindings,
 } from "@/lib/score";
-import { suggestPatch } from "@/lib/suggestPatch";
 import type {
   ScanErrorKind,
   ScanMode,
@@ -154,6 +155,10 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
 
   const startLocalFallback = useCallback(() => {
     const localFindings = createDemoFindings();
+    setSource("demo");
+    setGithubUrl("");
+    setRepository(DEMO_REPOSITORY);
+    setScanId(null);
     setFindings(localFindings);
     setSelectedFindingId(localFindings[0]?.id ?? "");
     setBaselineScore(scoreFromFindings(localFindings));
@@ -355,7 +360,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
         }
       }
       setConfirmingPatch(false);
-      setToast("Patch applied to the scan working copy. Download it to update the real repository.");
+      setToast("Patch applied to the scan working copy. Save the code to keep a local copy.");
     } catch {
       setError("patch_failure");
       setConfirmingPatch(false);
@@ -384,6 +389,37 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     }
     downloadPatchedFile();
   }, [downloadPatchedFile, scanId]);
+
+  const saveGeneratedCode = useCallback(async () => {
+    if (!selectedId || !selectedFinding) return;
+    try {
+      if (scanId) {
+        const exported = await exportFindingFix(scanId, selectedId);
+        const base = exported.path.replaceAll("/", "__") || "fix";
+        downloadTextFile(`${base}.diff`, exported.patch);
+        downloadTextFile(base, exported.patchedContent);
+        setToast("Saved the generated patch and updated file.");
+        return;
+      }
+      const suggestion = suggestPatch(selectedFinding);
+      const base = selectedFinding.file.replaceAll("/", "__") || "fix";
+      downloadTextFile(`${base}.diff`, suggestion.patch);
+      setToast("Saved the generated patch.");
+    } catch {
+      const fallback = selectedFinding.patch ?? "";
+      if (fallback) {
+        downloadTextFile(`${selectedFinding.file.replaceAll("/", "__")}.diff`, fallback);
+        setToast("Saved the generated patch.");
+        return;
+      }
+      setError("patch_failure");
+    }
+  }, [scanId, selectedFinding, selectedId]);
+
+  const runDemoFallback = useCallback(() => {
+    setError(null);
+    startLocalFallback();
+  }, [startLocalFallback]);
 
   const runRecheck = useCallback(async () => {
     if (!selectedId) return;
@@ -440,6 +476,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     downloadPatchedFile,
     downloadAllPatchedFiles,
     patchedFile,
+    saveGeneratedCode,
+    runDemoFallback,
     runRecheck,
     reportReady:
       status === "report_ready" || status === "patch_ready" || status === "rechecking" || status === "resolved",

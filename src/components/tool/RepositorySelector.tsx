@@ -54,12 +54,12 @@ export function RepositorySelector({
       <section className="panel hud-panel rounded-2xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="label text-cyan">Demo repository</p>
+            <p className="label text-cyan">{source === "github" ? "GitHub repository" : "Demo repository"}</p>
             <p className="pixel-heading mt-1 text-lg text-white/90">{repository.name}</p>
           </div>
           <p className="flex items-center gap-2 text-sm text-lime">
             <span className="h-1.5 w-1.5 rounded-full bg-lime shadow-[0_0_10px_#B8FF4D]" aria-hidden="true" />
-            Authorized demo copy in review
+            {source === "github" ? "Authorized GitHub scan in review" : "Authorized demo copy in review"}
           </p>
         </div>
       </section>
@@ -71,8 +71,8 @@ export function RepositorySelector({
       <p className="label text-cyan">
         <ScrambleText text="C0RTEX analyzer" />
       </p>
-      <h1 className="pixel-heading mt-2 text-3xl text-white sm:text-4xl">
-        Analyze an authorized codebase like an attacker.
+      <h1 className="pixel-heading mt-2 text-4xl font-bold text-white sm:text-6xl xl:text-7xl">
+        ANALYSIS
         <span className="pixel-asterisk" aria-hidden="true">
           *
         </span>

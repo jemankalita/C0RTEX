@@ -118,6 +118,16 @@ export async function getPatchedFiles(scanId: string) {
   );
 }
 
+export async function exportFindingFix(scanId: string, findingId: string) {
+  return readJson<{
+    path: string;
+    patch: string;
+    patchExplanation: string;
+    originalContent: string;
+    patchedContent: string;
+  }>(await fetch(`/api/scans/${scanId}/findings/${findingId}/export`));
+}
+
 export function downloadTextFile(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);

@@ -15,6 +15,7 @@ type PatchViewerProps = {
   onConfirmToggle: (value: boolean) => void;
   onApply: () => void;
   onReject: () => void;
+  onSaveCode: () => void;
   onDownload: () => void;
   onDownloadAll: () => void;
 };
@@ -30,18 +31,18 @@ export function PatchViewer({
   onConfirmToggle,
   onApply,
   onReject,
+  onSaveCode,
   onDownload,
   onDownloadAll,
 }: PatchViewerProps) {
   const [copied, setCopied] = useState(false);
-  const remote = source === "github";
 
   return (
     <section className="panel p-5">
       <p className="text-sm font-semibold text-bone">Suggested fix</p>
       <p className="mt-2 text-sm text-muted">
-        Generate a reviewable patch, apply it to this scan&apos;s working copy, then download the
-        changed file and commit it in the real repository. C0RTEX does not push to GitHub.
+        Generate a reviewable change, save the updated code, then commit it in the real repository.
+        C0RTEX does not push to GitHub.
       </p>
       {!visible ? (
         <button
@@ -78,6 +79,9 @@ export function PatchViewer({
               className="rounded-full bg-lime px-3 py-2 text-sm font-semibold text-bg disabled:opacity-40"
             >
               Apply to working copy
+            </button>
+            <button type="button" onClick={onSaveCode} className="btn-ghost">
+              Save generated code
             </button>
             <button
               type="button"
@@ -119,9 +123,9 @@ export function PatchViewer({
             Apply this patch to the scan working copy?
           </h3>
           <p className="mt-2 text-sm text-muted">
-            {remote
-              ? "This updates the copied files from the scan so C0RTEX can recheck the path. It will not commit or open a pull request on GitHub."
-              : "This updates the temporary demo copy so the finding can be rechecked. It will not change files on disk unless you download them."}
+            {source === "github"
+              ? "This updates the copied GitHub files in this scan only. Save the generated code to keep a local file. It will not push to GitHub."
+              : "This updates the temporary demo copy. Save the generated code if you want the file on disk."}
           </p>
           <div className="mt-3 flex gap-2">
             <button
