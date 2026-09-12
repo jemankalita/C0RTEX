@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AttackPathGraph } from "@/components/AttackPathGraph";
+import { CountUp } from "@/components/motion/CountUp";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+import { ScrambleText } from "@/components/motion/Scramble";
 import { useRobot } from "@/components/RobotContext";
 import { DEMO_ATTACK_SURFACE, getPrimaryFinding } from "@/data/demoFindings";
 import { WORKFLOW_FLOW, WORKFLOW_STEPS, type WorkflowStage } from "@/data/workflowSteps";
@@ -40,11 +43,19 @@ export function WorkflowSection() {
   return (
     <section id="how-it-works" className="border-t border-line py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <p className="bracket">[ agent ]</p>
-        <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
-          How C0RTEX reviews a codebase.
-        </h2>
-        <p className="mt-4 text-sm text-muted">{WORKFLOW_FLOW.join(" → ")}</p>
+        <Reveal>
+          <p className="bracket">
+            <ScrambleText text="[ agent ]" />
+          </p>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <h2 className="display mt-4 max-w-2xl text-4xl leading-[1.02] sm:text-6xl">
+            How C0RTEX reviews a codebase.
+          </h2>
+        </Reveal>
+        <Reveal delay={0.16}>
+          <p className="mt-4 text-sm text-muted">{WORKFLOW_FLOW.join(" → ")}</p>
+        </Reveal>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="lg:sticky lg:top-28 lg:self-start">
@@ -77,10 +88,10 @@ export function WorkflowSection() {
             </div>
           </div>
 
-          <div className="space-y-8">
+          <StaggerGroup className="space-y-8">
             {WORKFLOW_STEPS.map((step) => (
+              <StaggerItem key={step.id}>
               <article
-                key={step.id}
                 ref={(node) => {
                   stepRefs.current[step.id] = node;
                 }}
@@ -94,19 +105,27 @@ export function WorkflowSection() {
                     <dl className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-2xl bg-elevated p-4">
                         <dt className="text-xs text-muted">Public routes</dt>
-                        <dd className="text-2xl text-cyan">{DEMO_ATTACK_SURFACE.publicRoutes}</dd>
+                        <dd className="text-2xl text-cyan">
+                          <CountUp to={DEMO_ATTACK_SURFACE.publicRoutes} />
+                        </dd>
                       </div>
                       <div className="rounded-2xl bg-elevated p-4">
                         <dt className="text-xs text-muted">Authenticated routes</dt>
-                        <dd className="text-2xl">{DEMO_ATTACK_SURFACE.authenticatedRoutes}</dd>
+                        <dd className="text-2xl">
+                          <CountUp to={DEMO_ATTACK_SURFACE.authenticatedRoutes} />
+                        </dd>
                       </div>
                       <div className="rounded-2xl bg-elevated p-4">
                         <dt className="text-xs text-muted">Database sinks</dt>
-                        <dd className="text-2xl text-amber">{DEMO_ATTACK_SURFACE.databaseSinks}</dd>
+                        <dd className="text-2xl text-amber">
+                          <CountUp to={DEMO_ATTACK_SURFACE.databaseSinks} />
+                        </dd>
                       </div>
                       <div className="rounded-2xl bg-elevated p-4">
                         <dt className="text-xs text-muted">Sensitive operations</dt>
-                        <dd className="text-2xl text-threat">{DEMO_ATTACK_SURFACE.sensitiveOperations}</dd>
+                        <dd className="text-2xl text-threat">
+                          <CountUp to={DEMO_ATTACK_SURFACE.sensitiveOperations} />
+                        </dd>
                       </div>
                     </dl>
                   ) : null}
@@ -149,8 +168,9 @@ Order returned without ownership check`}
                   ) : null}
                 </div>
               </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </div>
     </section>

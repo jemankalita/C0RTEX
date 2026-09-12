@@ -25,12 +25,14 @@ export function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 ${
-        scrolled ? "border-b border-line bg-bg/55 backdrop-blur-xl" : "bg-transparent"
+        scrolled
+          ? "border-b border-line bg-bg/60 backdrop-blur-xl"
+          : "bg-gradient-to-b from-black/80 via-black/30 to-transparent"
       }`}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3" aria-label="Primary">
-        <Link href="/" className="flex items-center" aria-label="C0RTEX home">
-          <SiteLogo className="h-14 w-auto md:h-[4.5rem]" />
+        <Link href="/" className="flex min-w-0 items-center" aria-label="C0RTEX home">
+          <SiteLogo className="h-14 w-auto sm:h-16 md:h-20" />
         </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
@@ -43,8 +45,8 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3">
-          <Link href="/tool?demo=true" className="btn-primary hidden md:inline-flex">
+        <div className="flex shrink-0 items-center gap-3">
+          <Link href="/tool?demo=true" className="btn-primary hidden whitespace-nowrap md:inline-flex">
             Start now
           </Link>
           <button

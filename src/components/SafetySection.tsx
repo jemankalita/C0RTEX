@@ -1,3 +1,7 @@
+"use client";
+
+import { StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+
 const PRINCIPLES = [
   {
     title: "Authorization required",
@@ -33,17 +37,17 @@ export function SafetySection() {
           Built for authorized defensive analysis. The demo stays inside the
           included repository. It does not probe arbitrary websites.
         </p>
-        <ol className="mt-12 grid gap-4 md:grid-cols-2">
+        <StaggerGroup as="ol" className="mt-12 grid gap-4 md:grid-cols-2" childAs="li">
           {PRINCIPLES.map((item, index) => (
-            <li key={item.title} className="panel rounded-2xl p-6">
+            <StaggerItem key={item.title} as="li" className="panel rounded-2xl p-6">
               <p className="bracket">
                 {String(index + 1).padStart(2, "0")}
               </p>
               <p className="mt-3 text-base font-medium">{item.title}</p>
               <p className="mt-2 text-sm leading-6 text-muted">{item.body}</p>
-            </li>
+            </StaggerItem>
           ))}
-        </ol>
+        </StaggerGroup>
       </div>
     </section>
   );

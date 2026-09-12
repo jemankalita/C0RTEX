@@ -1,3 +1,7 @@
+"use client";
+
+import { Marquee } from "@/components/motion/Marquee";
+
 const ITEMS = [
   { title: "Authorized only", body: "Scan code you own or have permission to test." },
   { title: "Static-first", body: "Start from code, context, and evidence." },
@@ -5,17 +9,36 @@ const ITEMS = [
   { title: "Transparent", body: "Every finding includes evidence and limits." },
 ] as const;
 
+function TickerContent() {
+  return (
+    <>
+      {ITEMS.map((item) => (
+        <span key={item.title} className="flex items-center gap-3 whitespace-nowrap px-8">
+          <span className="h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" />
+          <span className="text-sm font-semibold text-ink">{item.title}</span>
+          <span className="text-sm text-muted">{item.body}</span>
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function TrustStrip() {
   return (
-    <section className="border-y border-line">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="border-y border-line py-5">
+      <ul className="sr-only">
         {ITEMS.map((item) => (
-          <article key={item.title}>
-            <p className="text-sm font-medium text-ink">{item.title}</p>
-            <p className="mt-2 text-sm leading-6 text-muted">{item.body}</p>
-          </article>
+          <li key={item.title}>
+            {item.title}: {item.body}
+          </li>
         ))}
-      </div>
+      </ul>
+      <Marquee speed={32} className="py-1">
+        <div className="flex items-center">
+          <TickerContent />
+          <TickerContent />
+        </div>
+      </Marquee>
     </section>
   );
 }

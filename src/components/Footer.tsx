@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Wordmark } from "@/components/BrandMark";
+import { Reveal } from "@/components/motion/Reveal";
 
 export function Footer() {
   return (
-    <footer className="border-t border-line">
+    <Reveal as="footer" className="border-t border-line">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 md:flex-row md:justify-between">
         <div>
           <Wordmark className="text-sm font-medium" />
@@ -30,6 +33,6 @@ export function Footer() {
         C0RTEX is for authorized defensive analysis. It does not guarantee that an
         application is secure.
       </p>
-    </footer>
+    </Reveal>
   );
 }
