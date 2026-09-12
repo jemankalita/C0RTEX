@@ -18,20 +18,29 @@ export function ProgressRail() {
   const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const top = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (top) setActiveId(top.target.id);
-      },
-      { threshold: [0.2, 0.5], rootMargin: "-30% 0px -30% 0px" },
-    );
-    SECTIONS.forEach(({ id }) => {
-      const node = document.getElementById(id);
-      if (node) observer.observe(node);
-    });
-    return () => observer.disconnect();
+    // Scrollspy: the active section is the last one whose top sits above
+    // the viewport's focus line (40%). Works for sections of any height,
+    // and updates immediately on anchor navigation (hashchange).
+    const compute = () => {
+      const focusLine = window.innerHeight * 0.4;
+      let current: string = SECTIONS[0].id;
+      for (const { id } of SECTIONS) {
+        const node = document.getElementById(id);
+        if (!node) continue;
+        if (node.getBoundingClientRect().top <= focusLine) current = id;
+      }
+      setActiveId(current);
+    };
+
+    compute();
+    window.addEventListener("scroll", compute, { passive: true });
+    window.addEventListener("resize", compute);
+    window.addEventListener("hashchange", compute);
+    return () => {
+      window.removeEventListener("scroll", compute);
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("hashchange", compute);
+    };
   }, []);
 
   return (

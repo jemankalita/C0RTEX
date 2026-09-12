@@ -1,41 +1,111 @@
 "use client";
 
 import Link from "next/link";
-import { Wordmark } from "@/components/BrandMark";
+import { motion } from "framer-motion";
 import { Reveal } from "@/components/motion/Reveal";
+import { ScrambleText } from "@/components/motion/Scramble";
+
+const SITEMAP = [
+  { n: "01", label: "How it works", href: "/#how-it-works" },
+  { n: "02", label: "Reports", href: "/#threat-reports" },
+  { n: "03", label: "Accuracy", href: "/benchmark" },
+  { n: "04", label: "Safety", href: "/#safety" },
+  { n: "05", label: "Demo", href: "/#demo" },
+] as const;
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Footer() {
   return (
-    <Reveal as="footer" className="border-t border-line">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 md:flex-row md:justify-between">
-        <div>
-          <Wordmark className="text-sm font-medium" />
-          <p className="mt-3 max-w-sm text-sm text-muted">
-            Think like an attacker. Fix like an engineer.
+    <footer className="relative overflow-hidden border-t border-black/20 bg-lime">
+      {/* faint grid texture, Raven-style depth */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        aria-hidden="true"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,0,0,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.8) 1px, transparent 1px)",
+          backgroundSize: "72px 72px",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20">
+        {/* Brand block: giant pixel wordmark, Raven "About us" style */}
+        <Reveal>
+          <p className="bracket text-black/70">
+            <ScrambleText text="[ c0rtex ]" />
+          </p>
+          <h2 className="pixel-heading mt-4 text-[13vw] leading-[0.95] !text-black sm:text-7xl lg:text-8xl">
+            Think like an attacker.
+            <br />
+            <span className="text-black/45">Fix like an engineer.</span>
+            <span
+              className="pixel-asterisk !text-black"
+              aria-hidden="true"
+            >
+              *
+            </span>
+          </h2>
+        </Reveal>
+
+        <div className="mt-16 grid gap-12 md:grid-cols-[1fr_auto]">
+          {/* Careers-style CTA block, Raven "working at raven" style */}
+          <Reveal delay={0.1}>
+            <div className="max-w-md">
+              <p className="label !text-black !font-bold">START NOW</p>
+              <p className="mt-3 text-xl font-medium leading-8 !text-black">
+                Your code has attack paths?
+              </p>
+              <p className="text-xl font-medium leading-8 text-black/65">
+                Your rivals patch slower?
+              </p>
+              <p className="text-xl font-medium leading-8 text-black/65">If yes — challenge us.</p>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                className="mt-6 inline-block"
+              >
+                <Link
+                  href="/tool?demo=true"
+                  className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-3 font-semibold text-white transition-colors hover:bg-black/85"
+                >
+                  Run the analyzer
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </motion.div>
+            </div>
+          </Reveal>
+
+          {/* Sitemap: numbered uppercase links, Raven nav-column style */}
+          <Reveal delay={0.18}>
+            <nav aria-label="Footer">
+              <ul className="flex flex-col gap-4">
+                {SITEMAP.map(({ n, label, href }) => (
+                  <li key={href}>
+                    <a
+                      href={href}
+                      className="group flex items-baseline gap-3 text-lg font-bold uppercase tracking-[0.08em] !text-black transition-colors hover:!text-white"
+                    >
+                      <span className="font-mono text-[11px] font-normal text-black/50 transition-colors group-hover:text-white">
+                        [ {n} ]
+                      </span>
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </Reveal>
+        </div>
+
+        {/* Bottom row: year */}
+        <div className="mt-20 flex flex-col gap-2 border-t border-black/20 pt-6 text-xs leading-6 md:flex-row md:items-center md:justify-end">
+          <p className="font-mono text-[11px] uppercase tracking-[0.25em] text-black/60">
+            © {new Date().getFullYear()} c0rtex
           </p>
         </div>
-        <ul className="flex flex-col gap-3 text-sm text-muted">
-          <li>
-            <a href="/#how-it-works">How it works</a>
-          </li>
-          <li>
-            <a href="/#threat-reports">Reports</a>
-          </li>
-          <li>
-            <Link href="/benchmark">Accuracy</Link>
-          </li>
-          <li>
-            <a href="/#safety">Safety</a>
-          </li>
-          <li>
-            <Link href="/tool?demo=true">Start now</Link>
-          </li>
-        </ul>
       </div>
-      <p className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-6 text-muted">
-        C0RTEX is for authorized defensive analysis. It does not guarantee that an
-        application is secure.
-      </p>
-    </Reveal>
+    </footer>
   );
 }
