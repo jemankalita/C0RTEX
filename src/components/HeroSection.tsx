@@ -77,7 +77,7 @@ export function HeroSection() {
 
       {/* Finding ticker + status pill: clustered under the REPORTS nav item */}
       <div
-        className="absolute left-1/2 top-32 z-20 hidden -translate-x-[130px] lg:block"
+        className="absolute left-1/2 top-24 z-20 hidden -translate-x-[80px] lg:block"
         onMouseEnter={() => {
           setLookTarget("threat");
           setStatus("PATH DETECTED");
