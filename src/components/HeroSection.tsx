@@ -71,22 +71,24 @@ export function HeroSection() {
         <Reveal delay={0.4} y={36} className="relative min-h-[420px]">
           <LensBotScene className="mx-auto h-[440px] w-full max-w-[520px] lg:h-[560px]" />
 
-          <div
-            onMouseEnter={() => {
-              setLookTarget("threat");
-              setStatus("PATH DETECTED");
-            }}
-            onMouseLeave={() => {
-              setLookTarget("idle");
-              setStatus("IDLE");
-            }}
-          >
-            <HeroFindingTicker />
-          </div>
-
           <HeroScoreTicker />
         </Reveal>
       </HeroScrollFade>
+
+      {/* Finding ticker: far-left, over background only — clear of headline and robot */}
+      <div
+        className="absolute bottom-6 left-5 z-20 hidden lg:block"
+        onMouseEnter={() => {
+          setLookTarget("threat");
+          setStatus("PATH DETECTED");
+        }}
+        onMouseLeave={() => {
+          setLookTarget("idle");
+          setStatus("IDLE");
+        }}
+      >
+        <HeroFindingTicker />
+      </div>
     </section>
   );
 }

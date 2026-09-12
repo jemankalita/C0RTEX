@@ -3,7 +3,7 @@ import { isScanning, nextStage, SCAN_STAGES, stageIndex } from "@/lib/scanStages
 
 describe("scan stages", () => {
   it("uses the demo timings", () => {
-    expect(SCAN_STAGES.map((stage) => stage.durationMs)).toEqual([600, 900, 700, 900, 700, 900]);
+    expect(SCAN_STAGES.map((stage) => stage.durationMs)).toEqual([1400, 1600, 1500, 1800, 1500, 1200]);
   });
 
   it("advances through the scan until the report is ready", () => {
