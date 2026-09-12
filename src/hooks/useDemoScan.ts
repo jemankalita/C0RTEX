@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createDemoFindings } from "@/data/demoFindings";
 import { DEMO_REPOSITORY } from "@/data/demoRepository";
 import { applyDemoPatch, recheckFinding, withFindingStatus } from "@/lib/findingState";
+import { activeFindingId, resolveSelectedFinding } from "@/lib/selectFinding";
 import { ERROR_MESSAGES } from "@/lib/errors";
 import {
   applyPatch as applyRemotePatch,
@@ -14,6 +15,7 @@ import {
   requestPatch,
   subscribeScanEvents,
   toUiStatus,
+  type BackendProgress,
 } from "@/lib/scanClient";
 import { SCAN_STAGES, isScanning } from "@/lib/scanStages";
 import {
@@ -50,6 +52,8 @@ type UseDemoScanOptions = {
 
 export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   const [source, setSource] = useState<SourceKind>("demo");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [repository, setRepository] = useState(DEMO_REPOSITORY);
   const [authorized, setAuthorized] = useState(demoMode);
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [skipAnimation, setSkipAnimation] = useState(false);
@@ -86,7 +90,20 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
 
   useEffect(() => () => clearTimers(), [clearTimers]);
 
-  const selectedFinding = findings.find((finding) => finding.id === selectedFindingId) ?? findings[0];
+  const selectedFinding = resolveSelectedFinding(findings, selectedFindingId);
+  const selectedId = activeFindingId(selectedFinding);
+
+  useEffect(() => {
+    if (findings.length === 0) {
+      if (selectedFindingId !== "") {
+        setSelectedFindingId("");
+      }
+      return;
+    }
+    if (!findings.some((finding) => finding.id === selectedFindingId)) {
+      setSelectedFindingId(findings[0].id);
+    }
+  }, [findings, selectedFindingId]);
   const score = scoreFromFindings(findings);
   const counts = countFindingsBySeverity(findings);
   const primaryStatus: FindingStatus =
@@ -110,23 +127,32 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
 
   const loadReport = useCallback(async (id: string) => {
     const report = await getReport(id);
-    setFindings(report.findings);
+    setFindings(report.findings ?? []);
     setAnalysisMode(report.analysisMode);
     setSelectedLenses(report.selectedLenses ?? []);
+    if (report.repositoryName) {
+      setRepository((current) => ({
+        ...current,
+        name: report.repositoryName!,
+        files: report.fileCount ?? current.files,
+        description: source === "github" ? githubUrl : current.description,
+      }));
+    }
     setSurface({
       publicRoutes: report.publicRoutes,
       authenticatedRoutes: report.authenticatedRoutes,
       databaseSinks: report.databaseSinks,
       sensitiveOperations: report.sensitiveOperations,
     });
-    setSelectedFindingId(report.findings[0]?.id ?? "missing-object-auth");
+    setSelectedFindingId(report.findings[0]?.id ?? "");
     setStatus("report_ready");
     setToast("Threat report ready");
-  }, []);
+  }, [githubUrl, source]);
 
   const startLocalFallback = useCallback(() => {
-    setFindings(createDemoFindings());
-    setSelectedFindingId("missing-object-auth");
+    const localFindings = createDemoFindings();
+    setFindings(localFindings);
+    setSelectedFindingId(localFindings[0]?.id ?? "");
     setStatus("preparing");
     setAnalysisMode("demo");
     setAnalysisMessage(ANALYSIS_MESSAGES[0]);
@@ -157,22 +183,40 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     reportLoaded.current = false;
 
     try {
-      const created = await createScan(true, scanMode, lenses);
+      const created = await createScan(
+        true,
+        scanMode,
+        lenses,
+        source === "github" ? "github" : "demo",
+        source === "github" ? githubUrl : undefined,
+      );
       setScanId(created.scanId);
 
+      if (source === "github") {
+        setRepository((current) => ({
+          ...current,
+          name: githubUrl.replace("https://github.com/", ""),
+          description: githubUrl,
+        }));
+      }
+
       if (skipAnimation) {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
+        for (let attempt = 0; attempt < 40; attempt += 1) {
           const current = await getScan(created.scanId);
           if (current.status === "report_ready") {
             await loadReport(created.scanId);
             return;
           }
           if (current.status === "error") throw new Error(current.error ?? "Scan failed.");
-          await new Promise((resolve) => window.setTimeout(resolve, 250));
+          await new Promise((resolve) => window.setTimeout(resolve, 400));
         }
       }
 
-      stopEvents.current = subscribeScanEvents(created.scanId, (event) => {
+      const queue: BackendProgress[] = [];
+      let draining = false;
+      let lastUiStatus = "";
+
+      const applyEvent = (event: BackendProgress) => {
         setBackendStage(event.stage);
         setStatus(toUiStatus(event.stage));
         setAnalysisMessage(event.detail ?? event.label);
@@ -183,11 +227,38 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
         if (event.stage === "error") {
           setError("scan_failure");
         }
+      };
+
+      const drain = async () => {
+        if (draining) return;
+        draining = true;
+        while (queue.length > 0) {
+          const event = queue.shift();
+          if (!event) break;
+          const uiStatus = toUiStatus(event.stage);
+          const stageChanged = uiStatus !== lastUiStatus;
+          lastUiStatus = uiStatus;
+          applyEvent(event);
+          if (!skipAnimation && stageChanged && event.stage !== "error") {
+            await new Promise((resolve) => window.setTimeout(resolve, 1400));
+          }
+        }
+        draining = false;
+      };
+
+      stopEvents.current = subscribeScanEvents(created.scanId, (event) => {
+        queue.push(event);
+        void drain();
       });
     } catch {
+      if (source === "github") {
+        setError("scan_failure");
+        setStatus("error");
+        return;
+      }
       startLocalFallback();
     }
-  }, [authorized, clearTimers, lenses, loadReport, scanMode, skipAnimation, startLocalFallback]);
+  }, [authorized, clearTimers, githubUrl, lenses, loadReport, scanMode, skipAnimation, source, startLocalFallback]);
 
   const resetScan = useCallback(() => {
     clearTimers();
@@ -200,6 +271,8 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     setError(null);
     setToast(null);
     setSource("demo");
+    setGithubUrl("");
+    setRepository(DEMO_REPOSITORY);
     setScanId(null);
     setAnalysisMode("demo");
     reportLoaded.current = false;
@@ -213,15 +286,18 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   }, []);
 
   const generatePatch = useCallback(async () => {
+    if (!selectedId) return;
     setGeneratingPatch(true);
     setAnalysisMessage("Preparing remediation.");
-    setFindings((current) => withFindingStatus(current, selectedFinding.id, "UNDER_REVIEW"));
+    setFindings((current) => withFindingStatus(current, selectedId, "UNDER_REVIEW"));
     try {
       if (scanId) {
-        const result = await requestPatch(scanId, selectedFinding.id);
-        setFindings((current) =>
-          current.map((finding) => (finding.id === result.finding.id ? result.finding : finding)),
-        );
+        const result = await requestPatch(scanId, selectedId);
+        if (result.finding) {
+          setFindings((current) =>
+            current.map((finding) => (finding.id === result.finding.id ? result.finding : finding)),
+          );
+        }
       }
       setPatchVisible(true);
       setStatus((current) => (current === "report_ready" ? "patch_ready" : current));
@@ -230,7 +306,7 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
     } finally {
       setGeneratingPatch(false);
     }
-  }, [scanId, selectedFinding.id]);
+  }, [scanId, selectedId]);
 
   const rejectPatch = useCallback(() => {
     setPatchVisible(false);
@@ -239,12 +315,13 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
   }, []);
 
   const applyPatch = useCallback(async () => {
+    if (!selectedId) return;
     try {
       if (scanId) {
-        const result = await applyRemotePatch(scanId, selectedFinding.id);
-        setFindings(result.findings);
+        const result = await applyRemotePatch(scanId, selectedId);
+        setFindings(result.findings ?? []);
       } else {
-        const result = applyDemoPatch(findings, selectedFinding.id);
+        const result = applyDemoPatch(findings, selectedId);
         if ("error" in result) {
           setError("patch_failure");
           setConfirmingPatch(false);
@@ -258,32 +335,35 @@ export function useDemoScan({ demoMode }: UseDemoScanOptions) {
       setError("patch_failure");
       setConfirmingPatch(false);
     }
-  }, [findings, scanId, selectedFinding.id]);
+  }, [findings, scanId, selectedId]);
 
   const runRecheck = useCallback(async () => {
+    if (!selectedId) return;
     setStatus("rechecking");
     setAnalysisMessage("Validating the suggested change.");
     try {
       if (scanId) {
-        const result = await recheckRemoteFinding(scanId, selectedFinding.id);
-        setFindings(result.findings);
+        const result = await recheckRemoteFinding(scanId, selectedId);
+        setFindings(result.findings ?? []);
         setStatus(result.resolved ? "resolved" : "patch_ready");
         setToast(result.message);
         return;
       }
-      const result = recheckFinding(findings, selectedFinding.id);
+      const result = recheckFinding(findings, selectedId);
       setFindings(result.findings);
       setStatus("resolved");
       setToast("Finding resolved. Only the selected path was rechecked.");
     } catch {
       setError("scan_failure");
     }
-  }, [findings, scanId, selectedFinding.id]);
+  }, [findings, scanId, selectedId]);
 
   return {
-    repository: DEMO_REPOSITORY,
+    repository,
     source,
     setSource,
+    githubUrl,
+    setGithubUrl,
     authorized,
     setAuthorized,
     status,

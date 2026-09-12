@@ -13,6 +13,8 @@ type RepositorySelectorProps = {
   onSourceChange: (source: SourceKind) => void;
   authorized: boolean;
   onStart: () => void;
+  githubUrl?: string;
+  onGithubUrlChange?: (value: string) => void;
   demoMode: boolean;
   skipAnimation: boolean;
   onSkipAnimationChange: (value: boolean) => void;
@@ -29,6 +31,8 @@ export function RepositorySelector({
   onSourceChange,
   authorized,
   onStart,
+  githubUrl: githubUrlProp,
+  onGithubUrlChange,
   demoMode,
   skipAnimation,
   onSkipAnimationChange,
@@ -38,9 +42,12 @@ export function RepositorySelector({
   lenses = [],
   onLensesChange,
 }: RepositorySelectorProps) {
-  const [githubUrl, setGithubUrl] = useState("");
+  const [localGithubUrl, setLocalGithubUrl] = useState("");
+  const githubUrl = githubUrlProp ?? localGithubUrl;
+  const setGithubUrl = onGithubUrlChange ?? setLocalGithubUrl;
   const [zipNote, setZipNote] = useState(false);
   const githubValid = githubUrl.length === 0 || isValidGitHubRepoUrl(githubUrl);
+  const canStart = authorized && (source !== "github" || isValidGitHubRepoUrl(githubUrl));
 
   if (compact) {
     return (
@@ -150,9 +157,9 @@ export function RepositorySelector({
           {!githubValid ? (
             <p className="mt-2 text-sm text-threat">Enter a valid GitHub repository URL.</p>
           ) : githubUrl ? (
-            <p className="mt-2 text-sm text-amber">
-              For this demo, scans run against the built-in repository. GitHub scanning is planned
-              for the full version.
+            <p className="mt-2 text-sm text-lime">
+              C0RTEX will fetch this public repository and run the parallel security lenses against
+              its source files.
             </p>
           ) : null}
         </div>
@@ -230,9 +237,9 @@ export function RepositorySelector({
         <motion.button
           type="button"
           onClick={onStart}
-          disabled={!authorized}
-          whileHover={authorized ? { scale: 1.04, boxShadow: "0 0 24px rgba(198,255,77,0.45)" } : undefined}
-          whileTap={authorized ? { scale: 0.97 } : undefined}
+          disabled={!canStart}
+          whileHover={canStart ? { scale: 1.04, boxShadow: "0 0 24px rgba(198,255,77,0.45)" } : undefined}
+          whileTap={canStart ? { scale: 0.97 } : undefined}
           transition={{ type: "spring", stiffness: 400, damping: 18 }}
           className="rounded-full bg-lime px-5 py-3 font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-40"
         >

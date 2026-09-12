@@ -19,7 +19,8 @@ export async function POST(_request: Request, context: { params: Promise<{ scanI
   });
 
   const file = record.files.find((item) => item.path === finding.file);
-  const stillPresent = file ? scanFileForRule(file.path, file.content, finding.id) : true;
+  const ruleId = finding.ruleId ?? finding.id.split(":")[0];
+  const stillPresent = file ? scanFileForRule(file.path, file.content, ruleId, finding.line) : true;
   if (stillPresent && finding.status !== "PATCH_APPLIED") {
     emitScanEvent(record, {
       stage: "rechecking",

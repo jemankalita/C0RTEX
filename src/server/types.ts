@@ -91,6 +91,8 @@ export type ScanReport = {
   findings: SecurityFinding[];
   limitations: string[];
   failedAgents: string[];
+  repositoryName?: string;
+  fileCount?: number;
   publicRoutes: number;
   authenticatedRoutes: number;
   databaseSinks: number;

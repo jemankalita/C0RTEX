@@ -43,14 +43,17 @@ export async function createScan(
   authorized: boolean,
   mode: "auto" | "guided" = "auto",
   lenses: string[] = [],
+  source: "demo" | "github" = "demo",
+  githubUrl?: string,
 ) {
   return readJson<{ scanId: string; status: string }>(
     await fetch("/api/scans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        source: "demo",
-        repositoryId: "existing-demo",
+        source,
+        repositoryId: source === "demo" ? "existing-demo" : githubUrl,
+        githubUrl,
         authorized,
         mode,
         lenses,
@@ -72,6 +75,8 @@ export async function getReport(scanId: string) {
     scanMode: "auto" | "guided";
     selectedLenses: string[];
     findings: SecurityFinding[];
+    repositoryName?: string;
+    fileCount?: number;
     publicRoutes: number;
     authenticatedRoutes: number;
     databaseSinks: number;

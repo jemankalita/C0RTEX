@@ -30,13 +30,17 @@ export function isPrimaryAuthorizationFinding(finding: Pick<SecurityFinding, "id
 }
 
 export function scoreFromFindings(findings: SecurityFinding[]): number {
+  const recovered = findings
+    .filter((finding) => finding.status === "RESOLVED")
+    .reduce((sum, finding) => sum + Math.abs(finding.scoreImpact), 0);
+  const score = Math.max(0, Math.min(100, INITIAL_SCORE + recovered));
   const primaryResolved = findings.some(
     (finding) => finding.status === "RESOLVED" && isPrimaryAuthorizationFinding(finding),
   );
   if (primaryResolved) {
-    return RESOLVED_PRIMARY_SCORE;
+    return Math.max(score, RESOLVED_PRIMARY_SCORE);
   }
-  return INITIAL_SCORE;
+  return score;
 }
 
 export function categoryScoresFromStatus(primaryStatus: FindingStatus): CategoryScores {
