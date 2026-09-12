@@ -263,6 +263,22 @@ textarea:focus-visible {
   }
 }
 
+/* Scan-stage list: the currently running step breathes lime */
+.scan-stage-current {
+  animation: stage-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes stage-breathe {
+  0%,
+  100% {
+    color: rgba(215, 255, 107, 0.75);
+  }
+  50% {
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(215, 255, 107, 0.45);
+  }
+}
+
 /* Right-edge section progress rail (start · 02 · 03 …) */
 .progress-rail {
   position: fixed;
@@ -341,10 +357,11 @@ textarea:focus-visible {
 
 .nav-link {
   color: #ffffff;
-  font-size: 0.98rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+  font-size: 1.02rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .robot-blend {

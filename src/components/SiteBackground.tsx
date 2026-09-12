@@ -36,7 +36,7 @@ export function SiteBackground({ dim = "medium" }: SiteBackgroundProps) {
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-black" aria-hidden="true">
       <video
         ref={videoRef}
-        className="absolute inset-0 h-full w-full scale-105 object-cover brightness-110 contrast-105"
+        className="absolute inset-0 h-full w-full scale-105 object-cover opacity-60 brightness-110 contrast-105"
         autoPlay
         muted
         loop

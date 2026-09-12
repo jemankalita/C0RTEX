@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { GrainOverlay } from "@/components/GrainOverlay";
+import { Reveal, StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
+import { ScanningBeam, SlideIn } from "@/components/motion/SlideIn";
 import { RobotStatus } from "@/components/shared/RobotStatus";
 import { ApplicationMap } from "@/components/tool/ApplicationMap";
 import { AttackPath } from "@/components/tool/AttackPath";
@@ -48,6 +52,7 @@ export function ToolPage() {
 
   return (
     <div className="relative min-h-screen pb-16">
+      <GrainOverlay />
       <ToolNavbar onNewScan={scan.resetScan} />
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 md:px-6">
         {scan.analysisMode === "demo" && scan.status !== "idle" ? (
@@ -56,19 +61,33 @@ export function ToolPage() {
         {scan.selectedLenses.length > 0 ? (
           <p className="text-xs text-muted">Lenses: {scan.selectedLenses.join(", ")}</p>
         ) : null}
-        {scan.toast ? (
-          <p className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-2 text-sm text-lime" aria-live="polite">
-            {scan.toast}
-          </p>
-        ) : null}
-        {scan.errorMessage ? (
-          <p className="rounded-xl border border-threat/40 bg-threat/10 px-4 py-2 text-sm" role="alert">
-            {scan.errorMessage}
-            <button type="button" className="ml-3 underline" onClick={scan.startScan}>
-              Run demo fallback
-            </button>
-          </p>
-        ) : null}
+        <AnimatePresence>
+          {scan.toast ? (
+            <motion.p
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="rounded-xl border border-lime/30 bg-lime/10 px-4 py-2 text-sm text-lime"
+              aria-live="polite"
+            >
+              {scan.toast}
+            </motion.p>
+          ) : null}
+          {scan.errorMessage ? (
+            <motion.p
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="rounded-xl border border-threat/40 bg-threat/10 px-4 py-2 text-sm"
+              role="alert"
+            >
+              {scan.errorMessage}
+              <button type="button" className="ml-3 underline" onClick={scan.startScan}>
+                Run demo fallback
+              </button>
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
 
         <RepositorySelector
           repository={scan.repository}
@@ -88,15 +107,18 @@ export function ToolPage() {
           onLensesChange={scan.setLenses}
         />
         {started ? null : (
-          <AuthorizationNotice
-            authorized={scan.authorized}
-            onChange={scan.setAuthorized}
-            demoSelected={scan.source === "demo"}
-          />
+          <SlideIn from="left" animateKey={`auth-${started}`}>
+            <AuthorizationNotice
+              authorized={scan.authorized}
+              onChange={scan.setAuthorized}
+              demoSelected={scan.source === "demo"}
+            />
+          </SlideIn>
         )}
 
         <div className="lg:hidden">
           <SafetyScoreCard
+            ready={scan.reportReady}
             score={scan.summary.score}
             grade={scan.summary.grade}
             confidence={scan.summary.confidence}
@@ -198,57 +220,81 @@ export function ToolPage() {
 
           <section className="space-y-4">
             {scan.scanning ? (
-              <div className="panel rounded-2xl p-8">
-                <p className="label text-cyan">{robotStatus}</p>
-                <h2 className="mt-3 text-2xl font-semibold">Here is the attack path taking shape.</h2>
-                <p className="mt-2 text-sm text-muted">{scan.analysisMessage}</p>
-              </div>
+              <SlideIn from="bottom">
+                <div className="panel relative overflow-hidden rounded-2xl p-8">
+                  <ScanningBeam active />
+                  <p className="label text-cyan">
+                    <span className="scan-stage-current">{robotStatus}</span>
+                  </p>
+                  <h2 className="pixel-heading mt-3 text-2xl text-white/90 sm:text-3xl">
+                    Here is the attack path taking shape.
+                  </h2>
+                  <p className="mt-2 text-sm text-muted">{scan.analysisMessage}</p>
+                </div>
+              </SlideIn>
             ) : null}
             {scan.reportReady ? (
-              <>
-                <ScanSummaryCard
-                  repositoryName={scan.repository.name}
-                  summary={scan.summary}
-                  onStartOver={scan.resetScan}
-                />
-                <ApplicationMap summary={scan.summary} resolved={scan.status === "resolved"} />
-                <FindingDetail finding={scan.selectedFinding} />
+              <StaggerGroup className="space-y-4">
+                <StaggerItem>
+                  <ScanSummaryCard
+                    repositoryName={scan.repository.name}
+                    summary={scan.summary}
+                    onStartOver={scan.resetScan}
+                  />
+                </StaggerItem>
+                <StaggerItem>
+                  <ApplicationMap summary={scan.summary} resolved={scan.status === "resolved"} />
+                </StaggerItem>
+                <StaggerItem>
+                  <FindingDetail finding={scan.selectedFinding} animateKey={scan.selectedFinding.id} />
+                </StaggerItem>
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <AttackPath finding={scan.selectedFinding} />
-                  <EvidencePanel finding={scan.selectedFinding} />
+                  <StaggerItem>
+                    <AttackPath finding={scan.selectedFinding} />
+                  </StaggerItem>
+                  <StaggerItem>
+                    <EvidencePanel finding={scan.selectedFinding} />
+                  </StaggerItem>
                 </div>
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <CodeContext finding={scan.selectedFinding} />
-                  <div className="space-y-4">
-                    <PatchViewer
-                      finding={scan.selectedFinding}
-                      visible={scan.patchVisible}
-                      generating={scan.generatingPatch}
-                      confirming={scan.confirmingPatch}
-                      onGenerate={scan.generatePatch}
-                      onConfirmToggle={scan.setConfirmingPatch}
-                      onApply={scan.applyPatch}
-                      onReject={scan.rejectPatch}
-                    />
-                    <RecheckResult
-                      finding={scan.selectedFinding}
-                      score={scan.summary.score}
-                      initialScore={scan.initialScore}
-                      onRecheck={scan.runRecheck}
-                      rechecking={scan.status === "rechecking"}
-                    />
-                  </div>
+                  <StaggerItem>
+                    <CodeContext finding={scan.selectedFinding} animateKey={scan.selectedFinding.id} />
+                  </StaggerItem>
+                  <StaggerItem>
+                    <div className="space-y-4">
+                      <PatchViewer
+                        finding={scan.selectedFinding}
+                        visible={scan.patchVisible}
+                        generating={scan.generatingPatch}
+                        confirming={scan.confirmingPatch}
+                        onGenerate={scan.generatePatch}
+                        onConfirmToggle={scan.setConfirmingPatch}
+                        onApply={scan.applyPatch}
+                        onReject={scan.rejectPatch}
+                      />
+                      <RecheckResult
+                        finding={scan.selectedFinding}
+                        score={scan.summary.score}
+                        initialScore={scan.initialScore}
+                        onRecheck={scan.runRecheck}
+                        rechecking={scan.status === "rechecking"}
+                      />
+                    </div>
+                  </StaggerItem>
                 </div>
-              </>
+              </StaggerGroup>
             ) : scan.scanning ? null : (
-              <div className="panel rounded-2xl p-8 text-muted">
-                Confirm authorization, then start a threat scan to map the attack surface.
-              </div>
+              <Reveal>
+                <div className="panel rounded-2xl p-8 text-muted">
+                  Confirm authorization, then start a threat scan to map the attack surface.
+                </div>
+              </Reveal>
             )}
           </section>
 
           <aside className="space-y-4">
             <SafetyScoreCard
+              ready={scan.reportReady}
               score={scan.summary.score}
               grade={scan.summary.grade}
               confidence={scan.summary.confidence}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SlideIn } from "@/components/motion/SlideIn";
 import type { SecurityFinding } from "@/types/security";
 
 type PatchViewerProps = {
@@ -34,12 +35,12 @@ export function PatchViewer({
           type="button"
           onClick={onGenerate}
           disabled={generating || finding.status === "RESOLVED"}
-          className="mt-3 rounded-full bg-cyan px-4 py-2 text-sm font-semibold text-bg disabled:opacity-40"
+          className="mt-3 rounded-full bg-cyan px-4 py-2 text-sm font-semibold text-bg transition-shadow duration-300 hover:shadow-[0_0_20px_rgba(215,255,107,0.35)] disabled:opacity-40"
         >
           {generating ? "REASONING ABOUT MINIMAL FIX" : "Generate suggested fix"}
         </button>
       ) : (
-        <>
+        <SlideIn from="bottom" present animateKey={`patch-${finding.id}-${finding.status}`}>
           <pre className="mt-3 overflow-x-auto rounded-xl bg-bg p-4 font-mono text-xs leading-6">
             <code>{finding.patch}</code>
           </pre>
@@ -73,10 +74,10 @@ export function PatchViewer({
               Reject suggestion
             </button>
           </div>
-        </>
+        </SlideIn>
       )}
 
-      {confirming ? (
+      <SlideIn from="bottom" present={confirming} animateKey={`confirm-${finding.id}`}>
         <div
           role="dialog"
           aria-modal="true"
@@ -98,13 +99,13 @@ export function PatchViewer({
             <button
               type="button"
               onClick={onApply}
-              className="rounded-full bg-lime px-3 py-2 text-sm font-semibold text-bg"
+              className="rounded-full bg-lime px-3 py-2 text-sm font-semibold text-bg transition-shadow duration-300 hover:shadow-[0_0_20px_rgba(198,255,77,0.45)]"
             >
               Apply patch
             </button>
           </div>
         </div>
-      ) : null}
+      </SlideIn>
     </section>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { Reveal } from "@/components/motion/Reveal";
+import { ScrambleText } from "@/components/motion/Scramble";
 import { isValidGitHubRepoUrl } from "@/lib/githubUrl";
 import type { DemoRepository, ScanMode, SourceKind, ThreatLens } from "@/types/security";
 
@@ -48,28 +51,40 @@ export function RepositorySelector({
 
   if (compact) {
     return (
-      <section className="panel rounded-2xl p-5">
+      <section className="panel hud-panel rounded-2xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="label text-cyan">Demo repository</p>
-            <p className="mt-1 text-lg font-semibold">{repository.name}</p>
+            <p className="pixel-heading mt-1 text-lg text-white/90">{repository.name}</p>
           </div>
-          <p className="text-sm text-lime">Authorized demo copy in review</p>
+          <p className="flex items-center gap-2 text-sm text-lime">
+            <span className="h-1.5 w-1.5 rounded-full bg-lime shadow-[0_0_10px_#B8FF4D]" aria-hidden="true" />
+            Authorized demo copy in review
+          </p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="panel rounded-2xl p-5">
-      <p className="label text-cyan">C0RTEX analyzer</p>
-      <h1 className="mt-2 text-2xl font-semibold">Analyze an authorized codebase like an attacker.</h1>
-      <p className="mt-2 text-sm text-muted">
-        Map the attack surface, trace risky paths, understand the impact, and generate a reviewable
-        fix.
+    <section className="panel hud-panel rounded-2xl p-5">
+      <p className="label text-cyan">
+        <ScrambleText text="C0RTEX analyzer" />
       </p>
+      <h1 className="pixel-heading mt-2 text-3xl text-white sm:text-4xl">
+        Analyze an authorized codebase like an attacker.
+        <span className="pixel-asterisk" aria-hidden="true">
+          *
+        </span>
+      </h1>
+      <Reveal delay={0.15}>
+        <p className="mt-2 text-sm text-muted">
+          Map the attack surface, trace risky paths, understand the impact, and generate a
+          reviewable fix.
+        </p>
+      </Reveal>
 
-      <div className="mt-4 rounded-xl border border-line bg-elevated/80 p-4">
+      <Reveal delay={0.25} className="mt-4 rounded-xl border border-line bg-elevated/80 p-4">
         <p className="label">Demo repository</p>
         <p className="mt-1 text-lg font-semibold">{repository.name}</p>
         <p className="text-sm text-muted">{repository.description}</p>
@@ -91,7 +106,7 @@ export function RepositorySelector({
             <dd className="text-lime">Ready to scan</dd>
           </div>
         </dl>
-      </div>
+      </Reveal>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {(
@@ -219,14 +234,17 @@ export function RepositorySelector({
       </label>
 
       <div className="mt-4 flex flex-wrap gap-3">
-        <button
+        <motion.button
           type="button"
           onClick={onStart}
           disabled={!canStart}
+          whileHover={canStart ? { scale: 1.04, boxShadow: "0 0 24px rgba(198,255,77,0.45)" } : undefined}
+          whileTap={canStart ? { scale: 0.97 } : undefined}
+          transition={{ type: "spring", stiffness: 400, damping: 18 }}
           className="rounded-full bg-lime px-5 py-3 font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           Start threat scan →
-        </button>
+        </motion.button>
         {!demoMode ? (
           <button
             type="button"

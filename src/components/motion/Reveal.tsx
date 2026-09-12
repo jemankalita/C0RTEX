@@ -48,7 +48,7 @@ type StaggerGroupProps = {
   className?: string;
   /** Seconds between each child's animation. */
   stagger?: number;
-  as?: "div" | "ul" | "ol";
+  as?: "div" | "ul" | "ol" | "article" | "section";
   childAs?: "div" | "li" | "article";
 };
 

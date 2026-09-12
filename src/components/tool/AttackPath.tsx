@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import type { AttackPathNode, SecurityFinding } from "@/types/security";
 
 const typeLabel: Record<AttackPathNode["type"], string> = {
@@ -21,10 +22,15 @@ const statusClass: Record<AttackPathNode["status"], string> = {
 
 export function AttackPath({ finding }: { finding: SecurityFinding }) {
   const [selectedId, setSelectedId] = useState(finding.attackPath[0]?.id ?? "");
+  const [prevKey, setPrevKey] = useState(`${finding.id}:${finding.status}`);
 
-  useEffect(() => {
+  // Reset the selected node when the finding (or its status) changes —
+  // adjusted during render per React's "derive state from props" pattern.
+  const nextKey = `${finding.id}:${finding.status}`;
+  if (nextKey !== prevKey) {
+    setPrevKey(nextKey);
     setSelectedId(finding.attackPath[0]?.id ?? "");
-  }, [finding.id, finding.status]);
+  }
 
   const selected = finding.attackPath.find((node) => node.id === selectedId) ?? finding.attackPath[0];
 
@@ -33,21 +39,34 @@ export function AttackPath({ finding }: { finding: SecurityFinding }) {
       <p className="label">Attack path</p>
       <ol className="mt-4 flex flex-col gap-2">
         {finding.attackPath.map((node, index) => (
-          <li key={`${finding.id}-${node.id}`} className="flex flex-col items-start">
+          <motion.li
+            key={`${finding.id}-${node.id}`}
+            className="flex flex-col items-start"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+          >
             <button
               type="button"
               onClick={() => setSelectedId(node.id)}
-              className={`w-full rounded-xl border px-3 py-3 text-left transition-colors duration-500 ${statusClass[node.status]}`}
+              className={`w-full rounded-xl border px-3 py-3 text-left transition-colors duration-500 ${
+                statusClass[node.status]
+              } ${selectedId === node.id ? "pulse-ring" : ""}`}
             >
               <p className="font-mono text-[10px] tracking-widest">{typeLabel[node.type]}</p>
               <p className="text-sm">{node.label}</p>
             </button>
             {index < finding.attackPath.length - 1 ? (
-              <span className="px-3 py-1 text-muted" aria-hidden>
+              <motion.span
+                className="px-3 py-1 text-muted"
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.6, repeat: Infinity, delay: index * 0.25 }}
+                aria-hidden
+              >
                 ↓
-              </span>
+              </motion.span>
             ) : null}
-          </li>
+          </motion.li>
         ))}
       </ol>
       {selected ? (

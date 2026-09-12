@@ -1,3 +1,6 @@
+"use client";
+
+import { StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 import type { SecurityFinding } from "@/types/security";
 
 const severityColor: Record<string, string> = {
@@ -18,9 +21,9 @@ export function FindingsList({ findings, selectedId, onSelect }: FindingsListPro
   return (
     <section className="panel rounded-2xl p-4">
       <p className="label">Findings</p>
-      <ul className="mt-3 space-y-2">
+      <StaggerGroup as="ul" className="mt-3 space-y-2" childAs="li" stagger={0.07}>
         {findings.map((finding) => (
-          <li key={finding.id}>
+          <StaggerItem key={finding.id} as="li">
             <button
               type="button"
               onClick={() => onSelect(finding.id)}
@@ -37,9 +40,9 @@ export function FindingsList({ findings, selectedId, onSelect }: FindingsListPro
               <p className="text-xs text-muted">{finding.category}</p>
               <p className="text-xs text-muted">Confidence {finding.confidence}%</p>
             </button>
-          </li>
+          </StaggerItem>
         ))}
-      </ul>
+      </StaggerGroup>
     </section>
   );
 }

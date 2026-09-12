@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CircuitBoard } from "@/components/CircuitBoard";
 import { LensBotScene } from "@/components/LensBotScene";
+import { HeroFindingTicker, HeroScoreTicker } from "@/components/HeroFindingTicker";
 import { HeroHeadline, HeroScrollFade } from "@/components/motion/HeroMotion";
 import { Reveal } from "@/components/motion/Reveal";
 import { ScrambleText } from "@/components/motion/Scramble";
@@ -70,8 +71,7 @@ export function HeroSection() {
         <Reveal delay={0.4} y={36} className="relative min-h-[420px]">
           <LensBotScene className="mx-auto h-[440px] w-full max-w-[520px] lg:h-[560px]" />
 
-          <article
-            className="panel absolute left-0 top-8 hidden w-[230px] rounded-xl p-4 lg:block"
+          <div
             onMouseEnter={() => {
               setLookTarget("threat");
               setStatus("PATH DETECTED");
@@ -81,17 +81,10 @@ export function HeroSection() {
               setStatus("IDLE");
             }}
           >
-            <p className="bracket">[ finding ]</p>
-            <p className="mt-2 text-sm font-medium text-ink">Missing object authorization</p>
-            <p className="mt-2 font-mono text-[12px] text-muted">GET /api/orders/:id</p>
-            <p className="mt-3 text-[12px] text-muted">Reachable · 93% confidence</p>
-          </article>
+            <HeroFindingTicker />
+          </div>
 
-          <article className="panel absolute bottom-6 right-0 hidden w-[168px] rounded-xl p-4 lg:block">
-            <p className="bracket">[ score ]</p>
-            <p className="mt-2 text-3xl text-ink">64</p>
-            <p className="text-sm text-muted">Grade C · 100</p>
-          </article>
+          <HeroScoreTicker />
         </Reveal>
       </HeroScrollFade>
     </section>
