@@ -1,4 +1,5 @@
-import { SCAN_TIMELINE_LABELS, stageIndex } from "@/lib/scanStages";
+import { motion } from "framer-motion";
+import { SCAN_TIMELINE_LABELS, stageIndex, SCAN_STAGES } from "@/lib/scanStages";
 import type { ScanStatus } from "@/types/security";
 
 type ScanProgressProps = {
@@ -49,11 +50,25 @@ export function ScanProgress({ status, explanation }: ScanProgressProps) {
               >
                 {complete ? "✓" : index + 1}
               </span>
-              <span className={complete ? "text-ink" : "text-muted"}>{label}</span>
+              <span
+                className={`transition-colors duration-500 ${
+                  complete ? "text-ink" : current ? "scan-stage-current" : "text-muted"
+                }`}
+              >
+                {label}
+              </span>
             </li>
           );
         })}
       </ol>
+      <div className="mt-4 h-1 overflow-hidden rounded-full bg-elevated" aria-hidden="true">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-cyan to-lime"
+          initial={{ width: completeThrough <= 0 ? "0%" : `${(completeThrough / SCAN_STAGES.length) * 100}%` }}
+          animate={{ width: `${Math.max(completeThrough, 0) / SCAN_TIMELINE_LABELS.length * 100}%` }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
     </section>
   );
 }
