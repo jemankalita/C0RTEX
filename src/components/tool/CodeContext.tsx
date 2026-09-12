@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { SlideIn } from "@/components/motion/SlideIn";
 import { highlightTerms } from "@/lib/highlightTerms";
 import type { SecurityFinding } from "@/types/security";
 
-export function CodeContext({ finding }: { finding: SecurityFinding }) {
+export function CodeContext({ finding, animateKey }: { finding: SecurityFinding; animateKey?: string }) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [showFile, setShowFile] = useState(false);
   const [showTest, setShowTest] = useState(false);
@@ -28,7 +29,7 @@ export function CodeContext({ finding }: { finding: SecurityFinding }) {
   const pieces = highlightTerms(masked, finding.highlightTerms);
 
   return (
-    <section className="panel overflow-hidden rounded-2xl p-5">
+    <section className="panel hud-panel overflow-hidden rounded-2xl p-5">
       <p className="label">Code context</p>
       <p className="mt-2 font-mono text-xs text-cyan">
         {finding.file}:{finding.line}
@@ -75,16 +76,16 @@ export function CodeContext({ finding }: { finding: SecurityFinding }) {
           View related test
         </button>
       </div>
-      {showFile ? (
+      <SlideIn from="bottom" present={showFile} animateKey={`file-${animateKey ?? finding.id}`}>
         <p className="mt-3 rounded-xl border border-line bg-bg/60 p-3 font-mono text-xs text-muted">
           Demo file context: {finding.file}. This MVP shows the relevant excerpt only.
         </p>
-      ) : null}
-      {showTest && finding.relatedTestExcerpt ? (
+      </SlideIn>
+      <SlideIn from="bottom" present={showTest && Boolean(finding.relatedTestExcerpt)} animateKey={`test-${animateKey ?? finding.id}`}>
         <pre className="mt-3 overflow-x-auto rounded-xl bg-bg p-3 font-mono text-xs text-muted">
           <code>{finding.relatedTestExcerpt}</code>
         </pre>
-      ) : null}
+      </SlideIn>
       {feedback ? (
         <p className="mt-3 text-sm text-lime" aria-live="polite">
           {feedback}

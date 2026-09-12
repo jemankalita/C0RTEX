@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { CategoryScores } from "@/types/security";
 
 type SafetyScoreCardProps = {
@@ -10,34 +11,35 @@ type SafetyScoreCardProps = {
   categories: CategoryScores;
 };
 
+const CATEGORY_LABELS: Array<{ key: keyof CategoryScores; label: string }> = [
+  { key: "authorization", label: "Authorization" },
+  { key: "inputHandling", label: "Input handling" },
+  { key: "configuration", label: "Configuration" },
+  { key: "secrets", label: "Secrets" },
+  { key: "authentication", label: "Authentication" },
+];
+
 export function SafetyScoreCard({ score, grade, confidence, categories }: SafetyScoreCardProps) {
-  const [display, setDisplay] = useState(score);
+  const reduced = useReducedMotion();
+  const count = useMotionValue(reduced ? score : 0);
+  const display = useTransform(count, (value) => Math.round(value).toString());
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (media.matches) {
-      setDisplay(score);
+    if (reduced) {
+      count.set(score);
       return;
     }
-    const start = display;
-    const startTime = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const progress = Math.min((now - startTime) / 1000, 1);
-      setDisplay(Math.round(start + (score - start) * progress));
-      if (progress < 1) {
-        frame = requestAnimationFrame(tick);
-      }
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [score]);
+    count.set(0);
+    const controls = animate(count, score, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+    return () => controls.stop();
+  }, [count, score, reduced]);
 
   return (
-    <section className="panel rounded-2xl p-5">
+    <section className="panel hud-panel rounded-2xl p-5">
       <p className="label">Safety score</p>
-      <p className="mt-3 text-5xl font-semibold text-cyan">{display}</p>
+      <p className="pixel-heading mt-3 text-5xl text-cyan">
+        <motion.span>{display}</motion.span>
+      </p>
       <p className="text-sm text-muted">/ 100 · Grade {grade}</p>
       <p className="mt-2 text-sm text-muted">Scan confidence {confidence}%</p>
       <p className="mt-3 text-sm text-muted">
@@ -47,12 +49,23 @@ export function SafetyScoreCard({ score, grade, confidence, categories }: Safety
       <p className="mt-2 text-xs text-amber">
         This score is a prioritization signal, not a security guarantee.
       </p>
-      <ul className="mt-4 space-y-1 text-sm">
-        <li>Authorization: {categories.authorization}</li>
-        <li>Input handling: {categories.inputHandling}</li>
-        <li>Configuration: {categories.configuration}</li>
-        <li>Secrets: {categories.secrets}</li>
-        <li>Authentication: {categories.authentication}</li>
+      <ul className="mt-4 space-y-2 text-sm">
+        {CATEGORY_LABELS.map(({ key, label }, index) => (
+          <li key={key}>
+            <div className="mb-1 flex justify-between text-xs text-muted">
+              <span>{label}</span>
+              <span>{categories[key]}</span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-elevated">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-cyan to-lime"
+                initial={reduced ? false : { width: 0 }}
+                animate={{ width: `${categories[key]}%` }}
+                transition={{ duration: 1, delay: 0.1 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+          </li>
+        ))}
       </ul>
     </section>
   );

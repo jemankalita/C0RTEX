@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SlideIn } from "@/components/motion/SlideIn";
 
 const steps = [
   ["Pattern detection", "Deterministic rules identify suspicious code patterns."],
@@ -25,7 +26,7 @@ export function HowItWorksPanel() {
         <span className="label">How C0RTEX works</span>
         <span className="text-sm text-muted">{open ? "Hide" : "Show"}</span>
       </button>
-      {open ? (
+      <SlideIn from="bottom" present={open}>
         <div className="mt-4 space-y-3">
           <ol className="space-y-2 text-sm text-muted">
             {steps.map(([title, copy], index) => (
@@ -45,7 +46,7 @@ export function HowItWorksPanel() {
             treated as an assessment requiring human review, not as a security guarantee.
           </p>
         </div>
-      ) : null}
+      </SlideIn>
     </section>
   );
 }

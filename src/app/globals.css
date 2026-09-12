@@ -263,6 +263,22 @@ textarea:focus-visible {
   }
 }
 
+/* Scan-stage list: the currently running step breathes lime */
+.scan-stage-current {
+  animation: stage-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes stage-breathe {
+  0%,
+  100% {
+    color: rgba(215, 255, 107, 0.75);
+  }
+  50% {
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(215, 255, 107, 0.45);
+  }
+}
+
 /* Right-edge section progress rail (start · 02 · 03 …) */
 .progress-rail {
   position: fixed;
