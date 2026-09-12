@@ -75,9 +75,9 @@ export function HeroSection() {
         </Reveal>
       </HeroScrollFade>
 
-      {/* Finding ticker: far-left, over background only — clear of headline and robot */}
+      {/* Finding ticker: left edge, just below the navbar — over background only */}
       <div
-        className="absolute bottom-6 left-5 z-20 hidden lg:block"
+        className="absolute left-5 top-32 z-20 hidden lg:block"
         onMouseEnter={() => {
           setLookTarget("threat");
           setStatus("PATH DETECTED");
