@@ -116,6 +116,7 @@ export function ToolPage() {
 
         <div className="lg:hidden">
           <SafetyScoreCard
+            ready={scan.reportReady}
             score={scan.summary.score}
             grade={scan.summary.grade}
             confidence={scan.summary.confidence}
@@ -291,6 +292,7 @@ export function ToolPage() {
 
           <aside className="space-y-4">
             <SafetyScoreCard
+              ready={scan.reportReady}
               score={scan.summary.score}
               grade={scan.summary.grade}
               confidence={scan.summary.confidence}
