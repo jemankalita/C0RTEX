@@ -56,7 +56,7 @@ export function ToolPage() {
       <ToolNavbar onNewScan={scan.resetScan} />
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 md:px-6">
         {scan.analysisMode === "demo" && scan.status !== "idle" ? (
-          <p className="text-xs text-muted">Demo analysis mode — live AI reasoning is not configured.</p>
+          <p className="text-xs text-muted">Demo analysis mode — findings come from deterministic rules; live AI reasoning was not used.</p>
         ) : null}
         {scan.selectedLenses.length > 0 ? (
           <p className="text-xs text-muted">Lenses: {scan.selectedLenses.join(", ")}</p>

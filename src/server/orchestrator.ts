@@ -1,3 +1,4 @@
+import { resolveAnalysisMode } from "@/server/analysisMode";
 import { extractContext } from "@/server/context/extractContext";
 import { getServerEnv } from "@/server/env";
 import { enrichWithDemoKnowledge } from "@/server/fallback/enrichFindings";
@@ -71,6 +72,7 @@ export async function runSecurityAnalysis(scanId: string) {
     const env = getServerEnv();
     const provider = getLLMProvider();
     record.analysisMode = provider ? "live" : "demo";
+    let demoLimitation = "Demo analysis mode — live AI reasoning is not configured.";
 
     emit("reasoning", "Running selected security lenses in parallel.", 64);
     const agents = await runSpecializedAgents({
@@ -83,6 +85,15 @@ export async function runSecurityAnalysis(scanId: string) {
         emit("reasoning", `${agent} ${status}.`, 70, { agent, status });
       },
     });
+
+    const resolved = resolveAnalysisMode(Boolean(provider), agents);
+    record.analysisMode = resolved.mode;
+    if (resolved.unavailableReason) {
+      demoLimitation = `Demo analysis mode — live AI reasoning was unavailable: ${resolved.unavailableReason}`;
+      emit("reasoning", `Live AI unavailable — using deterministic rules. ${resolved.unavailableReason}`, 76, {
+        status: "failed",
+      });
+    }
 
     emit("synthesizing", "Merging agent results.", 82);
     const failedAgents = agents.filter((agent) => agent.status === "failed").map((agent) => agent.agent);
@@ -99,9 +110,7 @@ export async function runSecurityAnalysis(scanId: string) {
       ruleId: finding.ruleId ?? mergedRaw.find((item) => item.id === finding.id)?.ruleId,
       limitations: [
         ...finding.limitations,
-        record.analysisMode === "demo"
-          ? "Demo analysis mode — live AI reasoning is not configured."
-          : "Live model reasoning used only provided context.",
+        record.analysisMode === "demo" ? demoLimitation : "Live model reasoning used only provided context.",
         "This recheck verifies the selected rule and path. It does not prove that the entire application is secure.",
         ...failedAgents.map((agent) => `${agent} returned a partial or failed result.`),
       ],
@@ -119,9 +128,7 @@ export async function runSecurityAnalysis(scanId: string) {
       repositoryName: repository.name,
       fileCount: repository.files.length,
       limitations: [
-        record.analysisMode === "demo"
-          ? "Demo analysis mode — live AI reasoning is not configured."
-          : "Live analysis used Gemini with repository excerpts only.",
+        record.analysisMode === "demo" ? demoLimitation : "Live analysis used Gemini with repository excerpts only.",
         "This score is a risk-prioritization signal, not a security guarantee.",
         `Selected lenses: ${selectedLenses.join(", ")}.`,
         `Concurrency limit: ${env.concurrency}.`,
