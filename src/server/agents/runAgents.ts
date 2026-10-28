@@ -264,7 +264,16 @@ export async function runSpecializedAgents(options: {
     };
   });
 
-  const review = await synthesizeFindings(options.repository, options.findings, options.contexts, options.provider);
+  // When every live agent already failed (quota, outage), the review call would fail the same way.
+  const allFailed = options.provider !== null && agents.every((agent) => agent.status === "failed");
+  const review: AgentResult = allFailed
+    ? {
+        agent: "review",
+        status: "failed",
+        summary: "Skipped because every live agent failed.",
+        error: agents.find((agent) => agent.error)?.error ?? "Every live agent failed.",
+      }
+    : await synthesizeFindings(options.repository, options.findings, options.contexts, options.provider);
   options.onAgent?.(review.agent, review.status);
   return [...agents, review];
 }
